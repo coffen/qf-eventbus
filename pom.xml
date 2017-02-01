@@ -507,7 +507,13 @@
 			<artifactId>logback-classic</artifactId>
 			<scope>${libScope}</scope>
 		</dependency>
-		<!-- fileupload -->
+		
+		<!-- commons -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<scope>${libScope}</scope>
+		</dependency>
 		<dependency>
 			<groupId>commons-fileupload</groupId>
 			<artifactId>commons-fileupload</artifactId>
