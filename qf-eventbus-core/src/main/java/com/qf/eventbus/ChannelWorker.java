@@ -28,9 +28,9 @@ import org.slf4j.LoggerFactory;
  */
 public class ChannelWorker {
 	
-	private Logger log = LoggerFactory.getLogger(this.getClass());
+	private final Logger log = LoggerFactory.getLogger(this.getClass());
 	
-	private final ConcurrentHashMap<String, Channel> channelMap = new ConcurrentHashMap<String, Channel>();
+	private final ConcurrentHashMap<String, TopicChannel> channelMap = new ConcurrentHashMap<String, TopicChannel>();
 	
 	/**
 	 * 根据频道名称和类别创建频道. 
@@ -41,8 +41,9 @@ public class ChannelWorker {
 	 * @param type
 	 * @return
 	 */
-	public Channel build(String channelName, Class<? extends Channel> channelClazz) {
-		Channel channel = null;
+	@SuppressWarnings("unchecked")
+	public <T extends TopicChannel> T build(String channelName, Class<T> channelClazz) {
+		T channel = null;
 		if (StringUtils.isBlank(channelName)) {
 			log.error("创建频道失败, 频道名称为空");
 			return channel;
@@ -52,9 +53,9 @@ public class ChannelWorker {
 			return channel;
 		}
 		try {
-			Channel chl = channelMap.putIfAbsent(channelName, channelClazz.newInstance());
+			TopicChannel chl = channelMap.putIfAbsent(channelName, channelClazz.newInstance());
 			if (chl != null && chl.getClass() == channelClazz) {
-				channel = chl;
+				channel = (T)chl;
 			}
 		}
 		catch (Exception e) {
@@ -69,7 +70,7 @@ public class ChannelWorker {
 	 * @param channelName
 	 * @return
 	 */
-	public Channel getChannel(String channelName) {
+	public TopicChannel getChannel(String channelName) {
 		return channelMap.get(channelName);
 	}
 	
@@ -80,7 +81,7 @@ public class ChannelWorker {
 	 */
 	public List<String> getChannelList() {
 		List<String> channelList = new ArrayList<>();
-		for (Channel chl : channelMap.values()) {
+		for (TopicChannel chl : channelMap.values()) {
 			channelList.add(chl.getName());
 		}
 		return channelList;

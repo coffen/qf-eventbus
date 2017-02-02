@@ -29,7 +29,7 @@ public interface BusManager {
 	 * @param clazz
 	 * @return
 	 */
-	public Channel buildChannel(String name, Class<? extends Channel> clazz);
+	public <T extends TopicChannel> T buildChannel(String name, Class<T> clazz);
 	
 	/**
 	 * 绑定事件到指定频道

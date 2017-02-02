@@ -26,18 +26,18 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractBusManager implements BusManager, Listener {
 	
-	private Logger log = LoggerFactory.getLogger(this.getClass());
+	private final Logger log = LoggerFactory.getLogger(this.getClass());
 	
 	private ChannelWorker worker;
 	
 	@Override
-	public Channel buildChannel(String name, Class<? extends Channel> clazz) {
+	public <T extends TopicChannel> T buildChannel(String name, Class<T> clazz) {
 		return worker.build(name, clazz);
 	}
 	
 	@Override
 	public Sender bindEvent(Class<? extends Event> eventClass, String channel) {
-		Channel chl = worker.getChannel(channel);
+		TopicChannel chl = worker.getChannel(channel);
 		if (chl == null) {
 			log.error("绑定频道错误, 频道{}不存在", channel);
 			return null;
@@ -47,7 +47,7 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 	
 	@Override
 	public void unbindEvent(String sid, String channel) {
-		Channel chl = worker.getChannel(channel);
+		TopicChannel chl = worker.getChannel(channel);
 		if (chl == null) {
 			log.error("取消绑定频道错误, 频道{}不存在", channel);
 			return;
@@ -60,7 +60,7 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 	
 	@Override
 	public Receiver subscribe(String channel) {
-		Channel chl = worker.getChannel(channel);
+		TopicChannel chl = worker.getChannel(channel);
 		if (chl == null) {
 			log.error("订阅频道错误, 频道{}不存在", channel);
 			return null;
@@ -70,7 +70,7 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 	
 	@Override
 	public void unSubscribe(String rid, String channel) {
-		Channel chl = worker.getChannel(channel);
+		TopicChannel chl = worker.getChannel(channel);
 		if (chl == null) {
 			log.error("取消订阅频道错误, 频道{}不存在", channel);
 			return;

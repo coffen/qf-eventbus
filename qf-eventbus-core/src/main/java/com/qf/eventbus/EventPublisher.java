@@ -27,7 +27,7 @@ public interface EventPublisher {
 	 * @param type
 	 * @return
 	 */
-	public Channel buildChannel(String name);
+	public TopicChannel buildChannel(String name);
 	
 	/**
 	 * 注册订阅事件并绑定到指定频道

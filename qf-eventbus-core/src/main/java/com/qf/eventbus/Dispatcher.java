@@ -26,9 +26,9 @@ import com.qf.eventbus.executor.SingleExecutor;
  */
 public abstract class Dispatcher {
 	
-	private Logger log = LoggerFactory.getLogger(this.getClass());
+	private final Logger log = LoggerFactory.getLogger(this.getClass());
 	
-	private AbstractChannel channel;
+	private AbstractTopicChannel channel;
 	private Executor executor;
 	
 	protected ChannelHolder holder;
@@ -37,7 +37,7 @@ public abstract class Dispatcher {
 		this.executor = new SingleExecutor(this);
 	}
 	
-	public void setChannel(AbstractChannel channel) {
+	public void setChannel(AbstractTopicChannel channel) {
 		this.channel = channel;
 		this.holder = channel.getHolder();
 	}
