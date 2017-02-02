@@ -11,7 +11,7 @@ import java.util.Map;
  * <br>
  * Description: 频道容器
  * <br>
- * File Name: ChannelDataHolder.java
+ * File Name: ChannelHolder.java
  * <br>
  * Copyright: Copyright (C) 2015 All Rights Reserved.
  * <br>
@@ -22,7 +22,7 @@ import java.util.Map;
  * @version: v1.0
  *
  */
-public class ChannelDataHolder {
+public class ChannelHolder {
 	
 	private final Map<String, Sender> senderMap = new HashMap<String, Sender>();
 	private final Map<String, Receiver> receiverMap = new HashMap<String, Receiver>();
@@ -35,24 +35,32 @@ public class ChannelDataHolder {
 		return Collections.unmodifiableMap(receiverMap);
 	}
 	
-	public Sender getSender(String uuid) {
-		return senderMap.get(uuid);
+	public Sender getSender(String sid) {
+		return senderMap.get(sid);
 	}	
 	
 	public void addSender(Sender sender) {
 		if (sender != null) {
-			senderMap.put(sender.getPid(), sender);
+			senderMap.put(sender.getId(), sender);
 		}
 	}
 	
-	public Receiver getReceiver(String uuid) {
-		return receiverMap.get(uuid);
-	}	
+	public Sender removeSender(String sid) {
+		return senderMap.remove(sid);
+	}
+	
+	public Receiver getReceiver(String rid) {
+		return receiverMap.get(rid);
+	}
 	
 	public void addReceiver(Receiver receiver) {
 		if (receiver != null) {
-			receiverMap.put(receiver.getSid(), receiver);
+			receiverMap.put(receiver.getId(), receiver);
 		}
+	}
+	
+	public Receiver removeReceiver(String rid) {
+		return receiverMap.remove(rid);
 	}
 
 }

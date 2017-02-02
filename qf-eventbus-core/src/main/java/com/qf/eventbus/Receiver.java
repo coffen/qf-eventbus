@@ -24,27 +24,36 @@ public class Receiver implements Serializable {
 	
 	private static final long serialVersionUID = 2746998704184626286L;
 	
-	private String sid;	
+	private String id;	
 	private String channel;
 	
 	private Listener listener;
 	
-	public Receiver(String sid, String channel, Listener listener) {
-		this.sid = sid;
+	public Receiver(String rid, String channel) {
+		this.id = rid;
 		this.channel = channel;
-		this.listener = listener;
 	}
 	
-	public String getSid() {
-		return sid;
+	public String getId() {
+		return id;
 	}
 	
 	public String getChannel() {
 		return channel;
 	}
 	
+	public void setListener(Listener listener) {
+		this.listener = listener;
+	}
+	
+	public Listener getListener() {
+		return listener;
+	}
+	
 	public <T> void receive(ActionData<T> data) {
-		listener.onEvent(data);
+		if (listener != null) {
+			listener.onEvent(data);
+		}
 	}
 	
 }

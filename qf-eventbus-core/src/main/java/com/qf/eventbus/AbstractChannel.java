@@ -28,38 +28,49 @@ public abstract class AbstractChannel implements Channel {
 	private String name;
 	
 	private Dispatcher dispatcher;
-	private ChannelDataHolder holder;
+	private ChannelHolder holder;
 	
 	public String getName() {
 		return name;
 	}
 	
-	public Sender getSender(String pid, Class<? extends Event> eventClass) {
-		Sender sender = null;
-		Sender s = holder.getSender(pid);
-		if (s.getEvent() == eventClass) {
-			sender = s;
-		}
-		return sender;
-	}
-	
 	@Override
 	public Sender buildSender(Class<? extends Event> eventClass) {
-		String pid = TOKEN_PUBLISHER + UUID.randomUUID().toString().replace("-", "");
-		Sender sender = new Sender(pid, eventClass, getName(), dispatcher);
+		String sid = TOKEN_PUBLISHER + UUID.randomUUID().toString().replace("-", "");
+		Sender sender = new Sender(sid, eventClass, getName(), dispatcher);
 		holder.addSender(sender);
 		return sender;
 	}
 	
 	@Override
-	public Receiver buildReceiver(Listener listener) {
-		String sid = TOKEN_SUBSCRIBER + UUID.randomUUID().toString().replace("-", "");
-		Receiver receiver = new Receiver(sid, getName(), listener);
+	public Sender getSender(String sid) {
+		return holder.getSender(sid);
+	}
+	
+	@Override
+	public void cancelSender(String sid) {
+		holder.removeSender(sid);
+	}
+	
+	@Override
+	public Receiver buildReceiver() {
+		String rid = TOKEN_SUBSCRIBER + UUID.randomUUID().toString().replace("-", "");
+		Receiver receiver = new Receiver(rid, getName());
 		holder.addReceiver(receiver);
 		return receiver;
 	}
 	
-	public ChannelDataHolder getHolder() {
+	@Override
+	public Receiver getReceiver(String rid) {
+		return holder.getReceiver(rid);
+	}
+	
+	@Override
+	public void cancelReceiver(String rid) {
+		holder.removeReceiver(rid);
+	}
+	
+	public ChannelHolder getHolder() {
 		return holder;
 	}
 

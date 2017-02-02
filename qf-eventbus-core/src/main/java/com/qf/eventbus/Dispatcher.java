@@ -31,7 +31,7 @@ public abstract class Dispatcher {
 	private AbstractChannel channel;
 	private Executor executor;
 	
-	protected ChannelDataHolder holder;
+	protected ChannelHolder holder;
 	
 	public Dispatcher() {
 		this.executor = new SingleExecutor(this);
@@ -60,7 +60,7 @@ public abstract class Dispatcher {
 		if (data == null || StringUtils.isBlank(data.getSenderId()) || data.getEvent() == null) {
 			return false;
 		}
-		Sender sender = channel.getSender(data.getSenderId(), data.getEvent());
+		Sender sender = channel.getSender(data.getSenderId());
 		if (sender == null) {
 			return false;
 		}

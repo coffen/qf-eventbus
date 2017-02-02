@@ -24,20 +24,21 @@ public class Sender implements Serializable {
 
 	private static final long serialVersionUID = 6414438134186349922L;
 	
-	private String pid;	
+	private String id;	
 	private Class<? extends Event> eventClass;
 	private String channel;
 	
 	private Dispatcher dispatcher;
 	
-	public Sender(String pid, Class<? extends Event> eventClass, String channel, Dispatcher dispatcher) {
+	public Sender(String sid, Class<? extends Event> eventClass, String channel, Dispatcher dispatcher) {
+		this.id = sid;
 		this.eventClass = eventClass;
 		this.channel = channel;
 		this.dispatcher = dispatcher;
 	}
 	
-	public String getPid() {
-		return pid;
+	public String getId() {
+		return id;
 	}
 	
 	public Class<? extends Event> getEvent() {

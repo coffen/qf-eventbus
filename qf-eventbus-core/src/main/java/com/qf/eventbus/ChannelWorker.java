@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
  * <p>
  * Project Name: C2C商城
  * <br>
- * Description: 频道管理器
+ * Description: 频道工厂
  * <br>
  * File Name: ChannelWorker.java
  * <br>

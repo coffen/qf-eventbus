@@ -30,15 +30,48 @@ public interface Channel {
 	/**
 	 * 创建消息发送器
 	 * 
+	 * @param eventClass
 	 * @return
 	 */
 	public Sender buildSender(Class<? extends Event> eventClass);
+	
+	/**
+	 * 根据SenderId获取消息发送器
+	 * 
+	 * @param sid
+	 * @return
+	 */
+	public Sender getSender(String sid);
+	
+	/**
+	 * 注销消息发送器
+	 * 
+	 * @param sid
+	 * @return
+	 */
+	public void cancelSender(String sid);
 	
 	/**
 	 * 创建消息接收器
 	 * 
 	 * @return
 	 */
-	public Receiver buildReceiver(Listener listener);
+	public Receiver buildReceiver();
+	
+	/**
+	 * 根据ReceiverId获取消息接收器
+	 * 
+	 * @param rid
+	 * @return
+	 */
+	public Receiver getReceiver(String rid);
+	
+	/**
+	 * 注销消息接收器
+	 * 
+	 * @param sid
+	 * @return
+	 */
+	public void cancelReceiver(String rid);
 
 }

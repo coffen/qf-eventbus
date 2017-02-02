@@ -26,7 +26,7 @@ public interface BusManager {
 	 * 创建渠道
 	 * 
 	 * @param name
-	 * @param type
+	 * @param clazz
 	 * @return
 	 */
 	public Channel buildChannel(String name, Class<? extends Channel> clazz);
@@ -43,25 +43,15 @@ public interface BusManager {
 	/**
 	 * 解除指定频道的绑定
 	 * 
-	 * @param eventClass
+	 * @param sid
 	 * @param channel
-	 * @param ignoreMsg
 	 */
-	public void unbindEvent(Class<? extends Event> eventClass, String channel, boolean ignoreMsg);
-	
-	/**
-	 * 解除所有频道的绑定
-	 * 
-	 * @param eventClass
-	 * @param channel
-	 * @param ignoreMsg
-	 */
-	public void unbindEvent(Class<? extends Event> eventClass, boolean ignoreMsg);
+	public void unbindEvent(String sid, String channel);
 	
 	/**
 	 * 订阅事件
 	 * 
-	 * @param eventClazz
+	 * @param channel
 	 * @return
 	 */
 	public Receiver subscribe(String channel);
@@ -69,9 +59,10 @@ public interface BusManager {
 	/**
 	 * 取消订阅
 	 * 
-	 * @param eventClazz
+	 * @param rid
+	 * @param channel
 	 */
-	public void unSubscribe(String channel);
+	public void unSubscribe(String rid, String channel);
 	
 	/**
 	 * 查询全部频道列表

@@ -46,6 +46,39 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 	}
 	
 	@Override
+	public void unbindEvent(String sid, String channel) {
+		Channel chl = worker.getChannel(channel);
+		if (chl == null) {
+			log.error("取消绑定频道错误, 频道{}不存在", channel);
+			return;
+		}
+		Sender sender = chl.getSender(sid);
+		if (sender != null) {
+			chl.cancelSender(sid);
+		}
+	}
+	
+	@Override
+	public Receiver subscribe(String channel) {
+		Channel chl = worker.getChannel(channel);
+		if (chl == null) {
+			log.error("订阅频道错误, 频道{}不存在", channel);
+			return null;
+		}
+		return chl.buildReceiver();
+	}
+	
+	@Override
+	public void unSubscribe(String rid, String channel) {
+		Channel chl = worker.getChannel(channel);
+		if (chl == null) {
+			log.error("取消订阅频道错误, 频道{}不存在", channel);
+			return;
+		}
+		chl.cancelReceiver(rid);
+	}
+	
+	@Override
 	public List<String> getChannelList() {
 		return Collections.unmodifiableList(worker.getChannelList());
 	}

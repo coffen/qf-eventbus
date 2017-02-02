@@ -45,11 +45,4 @@ public interface EventPublisher {
 	 */
 	public void unRegister(Class<? extends Event> eventClass, String channel);
 	
-	/**
-	 * 从所有频道注销事件
-	 * 
-	 * @param eventClass
-	 */
-	public void unRegister(Class<? extends Event> eventClass);
-	
 }
