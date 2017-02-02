@@ -1,5 +1,8 @@
 package com.qf.eventbus;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,8 +34,13 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 	private ChannelWorker worker;
 	
 	@Override
-	public <T extends TopicChannel> T buildChannel(String name, Class<T> clazz) {
-		return worker.build(name, clazz);
+	public <T extends AbstractTopicChannel> TopicChannelHandler<T> buildChannel(String name, Class<T> clazz) {
+		TopicChannelHandler<T> handler = null;
+		T t = worker.build(name, clazz);
+		if (t != null) {
+			handler = buildChannelHandlerProxy(t);
+		}
+		return handler;
 	}
 	
 	@Override
@@ -81,6 +89,23 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 	@Override
 	public List<String> getChannelList() {
 		return Collections.unmodifiableList(worker.getChannelList());
+	}
+	
+	/**
+	 * 创建频道工具代理
+	 * 
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	private <T extends AbstractTopicChannel> TopicChannelHandler<T> buildChannelHandlerProxy(final T channel) {
+		if (channel != null) {
+			return (TopicChannelHandler<T>)Proxy.newProxyInstance(getClass().getClassLoader(), new Class[] { TopicChannelHandler.class }, new InvocationHandler() {
+				public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+					return method.invoke(channel, args);
+				}
+			});
+		}
+		return null;
 	}
 	
 }

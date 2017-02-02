@@ -42,7 +42,7 @@ public class ChannelWorker {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public <T extends TopicChannel> T build(String channelName, Class<T> channelClazz) {
+	public <T extends AbstractTopicChannel> T build(String channelName, Class<T> channelClazz) {
 		T channel = null;
 		if (StringUtils.isBlank(channelName)) {
 			log.error("创建频道失败, 频道名称为空");

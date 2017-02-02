@@ -73,15 +73,5 @@ public interface TopicChannel {
 	 * @return
 	 */
 	public void cancelReceiver(String rid);
-	
-	/**
-	 * 打开频道
-	 */
-	public void open();
-	
-	/**
-	 * 关闭频道
-	 */
-	public void close();
 
 }

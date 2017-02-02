@@ -1,6 +1,8 @@
 package com.qf.eventbus;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 
@@ -23,16 +25,23 @@ import java.util.List;
 public class EventSignaler implements EventPublisher, EventSubscriber {
 	
 	private AbstractBusManager busManager;
+	
+	ConcurrentHashMap<String, List<Sender>> channelMapping = new ConcurrentHashMap<String, List<Sender>>();
 
-
+	@SuppressWarnings("unchecked")
 	@Override
-	public TopicChannel buildChannel(String name) {
-		return null;
+	public <T extends AbstractTopicChannel> TopicChannelHandler<T> buildChannel(String name) {
+		TopicChannelHandler<DefaultTopicChannel> handler = busManager.buildChannel(name, DefaultTopicChannel.class);
+		if (handler != null) {
+			channelMapping.putIfAbsent(name, new ArrayList<Sender>());
+			handler.open();
+		}
+		return (TopicChannelHandler<T>)handler;
 	}
 
 	@Override
 	public void register(Class<? extends Event> eventClass, String channel) {
-		
+		busManager.bindEvent(eventClass, channel);
 	}
 
 	@Override

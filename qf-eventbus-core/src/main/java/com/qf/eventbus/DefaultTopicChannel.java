@@ -37,30 +37,33 @@ public class DefaultTopicChannel extends AbstractTopicChannel {
 		holder = new ChannelHolder();
 	}
 	
-	@Override
-	public void open() {
-		if (status == STATUS_OPEN || status == STATUS_CLOSE) {
-			log.error("频道已打开或已关闭");
-			return;
-		}
-		if (dispatcher == null) {
-			dispatcher = new MutilDispatcher();
-		}
-	}
-	
-	@Override
-	public void close() {
-		// TODO
-		holder = null;
-		dispatcher = null;
-	}
-	
 	public void setDispatcher(Dispatcher dispatcher) {
 		if (status == STATUS_OPEN) {
 			log.error("运行期不允许设置分发器");
 			return;
 		}
+		if (dispatcher == null) {
+			log.error("分发器为空, 设置失败");
+			return;
+		}
 		this.dispatcher = dispatcher;
+	}
+	
+	public boolean open() {
+		if (status == STATUS_OPEN || status == STATUS_CLOSE) {
+			log.error("频道已打开或已关闭");
+			return false;
+		}
+		if (dispatcher == null) {
+			dispatcher = new MutilDispatcher();
+		}
+		return true;
+	}
+	
+	public void close(boolean igoreMsg) {
+		// TODO
+		holder = null;
+		dispatcher = null;
 	}
 
 }

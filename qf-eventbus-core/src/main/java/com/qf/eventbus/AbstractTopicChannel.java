@@ -20,7 +20,7 @@ import java.util.UUID;
  * @version: v1.0
  *
  */
-public abstract class AbstractTopicChannel implements TopicChannel {
+public abstract class AbstractTopicChannel implements TopicChannel, TopicChannelHandler<AbstractTopicChannel> {
 	
 	public final static String TOKEN_PUBLISHER = "Pub";
 	public final static String TOKEN_SUBSCRIBER = "Sub";
