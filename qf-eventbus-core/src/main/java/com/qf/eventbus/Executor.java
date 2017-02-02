@@ -1,7 +1,5 @@
 package com.qf.eventbus;
 
-import java.util.concurrent.Future;
-
 /**
  * 
  * <p>

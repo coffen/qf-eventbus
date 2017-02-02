@@ -21,13 +21,6 @@ package com.qf.eventbus;
 public interface Channel {
 	
 	/**
-	 * 获取频道类型
-	 * 
-	 * @return ChannelType
-	 */
-	public ChannelType getType();
-	
-	/**
 	 * 获取频道名称
 	 * 
 	 * @return String

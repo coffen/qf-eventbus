@@ -7,7 +7,7 @@ import java.util.UUID;
  * <p>
  * Project Name: C2C商城
  * <br>
- * Description: 抽象频道
+ * Description: 频道抽象类
  * <br>
  * File Name: AbstractChannel.java
  * <br>
@@ -29,12 +29,6 @@ public abstract class AbstractChannel implements Channel {
 	
 	private Dispatcher dispatcher;
 	private ChannelDataHolder holder;
-	
-	public AbstractChannel() {
-		init();
-	}
-	
-	public abstract void init();
 	
 	public String getName() {
 		return name;
@@ -63,6 +57,10 @@ public abstract class AbstractChannel implements Channel {
 		Receiver receiver = new Receiver(sid, getName(), listener);
 		holder.addReceiver(receiver);
 		return receiver;
+	}
+	
+	public ChannelDataHolder getHolder() {
+		return holder;
 	}
 
 }

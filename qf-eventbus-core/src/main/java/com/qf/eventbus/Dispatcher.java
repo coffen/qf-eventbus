@@ -33,11 +33,13 @@ public abstract class Dispatcher {
 	
 	protected ChannelDataHolder holder;
 	
-	public Dispatcher(AbstractChannel channel, ChannelDataHolder channelDataHolder) {
-		this.channel = channel;
-		this.holder = channelDataHolder;
-		
+	public Dispatcher() {
 		this.executor = new SingleExecutor(this);
+	}
+	
+	public void setChannel(AbstractChannel channel) {
+		this.channel = channel;
+		this.holder = channel.getHolder();
 	}
 	
 	/**
