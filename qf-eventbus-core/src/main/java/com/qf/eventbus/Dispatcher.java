@@ -4,6 +4,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.qf.eventbus.executor.SingleExecutor;
+
 /**
  * 
  * <p>
@@ -27,9 +29,15 @@ public abstract class Dispatcher {
 	private Logger log = LoggerFactory.getLogger(this.getClass());
 	
 	private AbstractChannel channel;
+	private Executor executor;
 	
-	public Dispatcher(AbstractChannel channel) {
+	protected ChannelDataHolder holder;
+	
+	public Dispatcher(AbstractChannel channel, ChannelDataHolder channelDataHolder) {
 		this.channel = channel;
+		this.holder = channelDataHolder;
+		
+		this.executor = new SingleExecutor(this);
 	}
 	
 	/**
@@ -42,6 +50,7 @@ public abstract class Dispatcher {
 			log.error("消息验证失败, data={}", data);
 			return;
 		}
+		executor.submit(data);
 	}
 	
 	// 验证消息

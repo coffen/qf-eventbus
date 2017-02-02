@@ -1,7 +1,5 @@
 package com.qf.eventbus;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -30,9 +28,7 @@ public abstract class AbstractChannel implements Channel {
 	private String name;
 	
 	private Dispatcher dispatcher;
-	
-	private Map<String, Sender> senderMap = new HashMap<String, Sender>();
-	private Map<String, Receiver> receiverMap = new HashMap<String, Receiver>();
+	private ChannelDataHolder holder;
 	
 	public AbstractChannel() {
 		init();
@@ -46,7 +42,7 @@ public abstract class AbstractChannel implements Channel {
 	
 	public Sender getSender(String pid, Class<? extends Event> eventClass) {
 		Sender sender = null;
-		Sender s = senderMap.get(pid);
+		Sender s = holder.getSender(pid);
 		if (s.getEvent() == eventClass) {
 			sender = s;
 		}
@@ -57,16 +53,16 @@ public abstract class AbstractChannel implements Channel {
 	public Sender buildSender(Class<? extends Event> eventClass) {
 		String pid = TOKEN_PUBLISHER + UUID.randomUUID().toString().replace("-", "");
 		Sender sender = new Sender(pid, eventClass, getName(), dispatcher);
-		senderMap.put(pid, sender);
+		holder.addSender(sender);
 		return sender;
 	}
 	
 	@Override
 	public Receiver buildReceiver(Listener listener) {
 		String sid = TOKEN_SUBSCRIBER + UUID.randomUUID().toString().replace("-", "");
-		Receiver Receiver = new Receiver(sid, getName(), listener);
-		receiverMap.put(sid, Receiver);
-		return Receiver;
+		Receiver receiver = new Receiver(sid, getName(), listener);
+		holder.addReceiver(receiver);
+		return receiver;
 	}
 
 }
