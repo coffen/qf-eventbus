@@ -31,7 +31,8 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 	
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 	
-	private ChannelWorker worker;
+	private ChannelWorker worker = new ChannelWorker();
+	protected EventSignaler mainSignaler = new EventSignaler();
 	
 	@Override
 	public <T extends AbstractChannel> ChannelHandler<T> buildChannel(String name, Class<T> clazz) {
