@@ -7,7 +7,7 @@ import java.util.List;
  * <p>
  * Project Name: C2C商城
  * <br>
- * Description: 总线管理器
+ * Description: 总线管理接口
  * <br>
  * File Name: BusManager.java
  * <br>

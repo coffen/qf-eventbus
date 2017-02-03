@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
  * <p>
  * Project Name: C2C商城
  * <br>
- * Description: 
+ * Description: 总线管理抽象类
  * <br>
  * File Name: AbstractBusManager.java
  * <br>

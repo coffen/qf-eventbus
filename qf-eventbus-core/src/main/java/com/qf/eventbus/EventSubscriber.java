@@ -7,7 +7,7 @@ import java.util.List;
  * <p>
  * Project Name: C2C商城
  * <br>
- * Description: 订阅者
+ * Description: 订阅者接口
  * <br>
  * File Name: EventSubscriber.java
  * <br>

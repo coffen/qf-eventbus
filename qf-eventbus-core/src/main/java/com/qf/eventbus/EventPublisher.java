@@ -5,7 +5,7 @@ package com.qf.eventbus;
  * <p>
  * Project Name: C2C商城
  * <br>
- * Description: 发布者
+ * Description: 发布者接口
  * <br>
  * File Name: EventPublisher.java
  * <br>
