@@ -30,13 +30,13 @@ public class EventSignaler implements EventPublisher, EventSubscriber {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T extends AbstractTopicChannel> TopicChannelHandler<T> buildChannel(String name) {
-		TopicChannelHandler<DefaultTopicChannel> handler = busManager.buildChannel(name, DefaultTopicChannel.class);
+	public <T extends AbstractChannel> ChannelHandler<T> buildChannel(String name) {
+		ChannelHandler<DefaultChannel> handler = busManager.buildChannel(name, DefaultChannel.class);
 		if (handler != null) {
 			channelMapping.putIfAbsent(name, new ArrayList<Sender>());
 			handler.open();
 		}
-		return (TopicChannelHandler<T>)handler;
+		return (ChannelHandler<T>)handler;
 	}
 
 	@Override

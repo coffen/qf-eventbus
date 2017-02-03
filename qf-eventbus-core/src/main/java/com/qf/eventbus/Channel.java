@@ -5,9 +5,9 @@ package com.qf.eventbus;
  * <p>
  * Project Name: C2C商城
  * <br>
- * Description: 主题频道
+ * Description: 频道
  * <br>
- * File Name: TopicChannel.java
+ * File Name: Channel.java
  * <br>
  * Copyright: Copyright (C) 2015 All Rights Reserved.
  * <br>
@@ -18,7 +18,7 @@ package com.qf.eventbus;
  * @version: v1.0
  *
  */
-public interface TopicChannel {
+public interface Channel {
 	
 	/**
 	 * 获取频道名称

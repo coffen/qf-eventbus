@@ -34,8 +34,8 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 	private ChannelWorker worker;
 	
 	@Override
-	public <T extends AbstractTopicChannel> TopicChannelHandler<T> buildChannel(String name, Class<T> clazz) {
-		TopicChannelHandler<T> handler = null;
+	public <T extends AbstractChannel> ChannelHandler<T> buildChannel(String name, Class<T> clazz) {
+		ChannelHandler<T> handler = null;
 		T t = worker.build(name, clazz);
 		if (t != null) {
 			handler = buildChannelHandlerProxy(t);
@@ -45,7 +45,7 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 	
 	@Override
 	public Sender bindEvent(Class<? extends Event> eventClass, String channel) {
-		TopicChannel chl = worker.getChannel(channel);
+		Channel chl = worker.getChannel(channel);
 		if (chl == null) {
 			log.error("绑定频道错误, 频道{}不存在", channel);
 			return null;
@@ -55,7 +55,7 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 	
 	@Override
 	public void unbindEvent(String sid, String channel) {
-		TopicChannel chl = worker.getChannel(channel);
+		Channel chl = worker.getChannel(channel);
 		if (chl == null) {
 			log.error("取消绑定频道错误, 频道{}不存在", channel);
 			return;
@@ -68,7 +68,7 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 	
 	@Override
 	public Receiver subscribe(String channel) {
-		TopicChannel chl = worker.getChannel(channel);
+		Channel chl = worker.getChannel(channel);
 		if (chl == null) {
 			log.error("订阅频道错误, 频道{}不存在", channel);
 			return null;
@@ -78,7 +78,7 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 	
 	@Override
 	public void unSubscribe(String rid, String channel) {
-		TopicChannel chl = worker.getChannel(channel);
+		Channel chl = worker.getChannel(channel);
 		if (chl == null) {
 			log.error("取消订阅频道错误, 频道{}不存在", channel);
 			return;
@@ -97,9 +97,9 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	private <T extends AbstractTopicChannel> TopicChannelHandler<T> buildChannelHandlerProxy(final T channel) {
+	private <T extends AbstractChannel> ChannelHandler<T> buildChannelHandlerProxy(final T channel) {
 		if (channel != null) {
-			return (TopicChannelHandler<T>)Proxy.newProxyInstance(getClass().getClassLoader(), new Class[] { TopicChannelHandler.class }, new InvocationHandler() {
+			return (ChannelHandler<T>)Proxy.newProxyInstance(getClass().getClassLoader(), new Class[] { ChannelHandler.class }, new InvocationHandler() {
 				public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 					return method.invoke(channel, args);
 				}

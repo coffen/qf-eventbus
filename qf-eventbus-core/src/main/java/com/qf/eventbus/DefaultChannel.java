@@ -10,9 +10,9 @@ import com.qf.eventbus.dispatcher.MutilDispatcher;
  * <p>
  * Project Name: C2C商城
  * <br>
- * Description: 主题模式频道
+ * Description: 默认频道
  * <br>
- * File Name: DefaultTopicChannel.java
+ * File Name: DefaultChannel.java
  * <br>
  * Copyright: Copyright (C) 2015 All Rights Reserved.
  * <br>
@@ -23,7 +23,7 @@ import com.qf.eventbus.dispatcher.MutilDispatcher;
  * @version: v1.0
  *
  */
-public class DefaultTopicChannel extends AbstractTopicChannel {
+public class DefaultChannel extends AbstractChannel {
 	
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 	
@@ -33,7 +33,7 @@ public class DefaultTopicChannel extends AbstractTopicChannel {
 	
 	private int status = STATUS_UNSTART;
 	
-	public DefaultTopicChannel() {
+	public DefaultChannel() {
 		holder = new ChannelHolder();
 	}
 	

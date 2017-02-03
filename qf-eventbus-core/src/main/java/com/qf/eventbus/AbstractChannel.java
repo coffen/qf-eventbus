@@ -7,9 +7,9 @@ import java.util.UUID;
  * <p>
  * Project Name: C2C商城
  * <br>
- * Description: 主题频道抽象类
+ * Description: 频道抽象类
  * <br>
- * File Name: AbstractTopicChannel.java
+ * File Name: AbstractChannel.java
  * <br>
  * Copyright: Copyright (C) 2015 All Rights Reserved.
  * <br>
@@ -20,7 +20,7 @@ import java.util.UUID;
  * @version: v1.0
  *
  */
-public abstract class AbstractTopicChannel implements TopicChannel, TopicChannelHandler<AbstractTopicChannel> {
+public abstract class AbstractChannel implements Channel, ChannelHandler<AbstractChannel> {
 	
 	public final static String TOKEN_PUBLISHER = "Pub";
 	public final static String TOKEN_SUBSCRIBER = "Sub";

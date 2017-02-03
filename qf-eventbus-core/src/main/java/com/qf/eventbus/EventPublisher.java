@@ -27,7 +27,7 @@ public interface EventPublisher {
 	 * @param type
 	 * @return
 	 */
-	public <T extends AbstractTopicChannel> TopicChannelHandler<T> buildChannel(String name);
+	public <T extends AbstractChannel> ChannelHandler<T> buildChannel(String name);
 	
 	/**
 	 * 注册订阅事件并绑定到指定频道

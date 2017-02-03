@@ -28,7 +28,7 @@ public abstract class Dispatcher {
 	
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 	
-	private AbstractTopicChannel channel;
+	private AbstractChannel channel;
 	private Executor executor;
 	
 	protected ChannelHolder holder;
@@ -37,7 +37,7 @@ public abstract class Dispatcher {
 		this.executor = new SingleExecutor(this);
 	}
 	
-	public void setChannel(AbstractTopicChannel channel) {
+	public void setChannel(AbstractChannel channel) {
 		this.channel = channel;
 		this.holder = channel.getHolder();
 	}

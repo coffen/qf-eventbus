@@ -5,7 +5,7 @@ package com.qf.eventbus;
  * <p>
  * Project Name: C2C商城
  * <br>
- * Description: 频道处理工具
+ * Description: 频道操作器
  * <br>
  * File Name: ChannelHandler.java
  * <br>
@@ -14,11 +14,18 @@ package com.qf.eventbus;
  * Company: 杭州偶尔科技有限公司
  * <br>
  * @author 穷奇
- * @create time：2017年2月2日 下午10:38:55 
+ * @create time：2017年2月2日 下午10:55:24 
  * @version: v1.0
  *
  */
-public interface ChannelHandler<T extends AbstractTopicChannel> {
+public interface ChannelHandler<T extends AbstractChannel> {
+	
+	/**
+	 * 设置分发器
+	 * 
+	 * @param dispatcher
+	 */
+	public void setDispatcher(Dispatcher dispatcher);
 	
 	/**
 	 * 开启频道

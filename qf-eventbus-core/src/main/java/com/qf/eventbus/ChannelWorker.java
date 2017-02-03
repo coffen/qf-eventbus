@@ -30,7 +30,7 @@ public class ChannelWorker {
 	
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 	
-	private final ConcurrentHashMap<String, TopicChannel> channelMap = new ConcurrentHashMap<String, TopicChannel>();
+	private final ConcurrentHashMap<String, Channel> channelMap = new ConcurrentHashMap<String, Channel>();
 	
 	/**
 	 * 根据频道名称和类别创建频道. 
@@ -42,7 +42,7 @@ public class ChannelWorker {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public <T extends AbstractTopicChannel> T build(String channelName, Class<T> channelClazz) {
+	public <T extends AbstractChannel> T build(String channelName, Class<T> channelClazz) {
 		T channel = null;
 		if (StringUtils.isBlank(channelName)) {
 			log.error("创建频道失败, 频道名称为空");
@@ -53,7 +53,7 @@ public class ChannelWorker {
 			return channel;
 		}
 		try {
-			TopicChannel chl = channelMap.putIfAbsent(channelName, channelClazz.newInstance());
+			Channel chl = channelMap.putIfAbsent(channelName, channelClazz.newInstance());
 			if (chl != null && chl.getClass() == channelClazz) {
 				channel = (T)chl;
 			}
@@ -70,7 +70,7 @@ public class ChannelWorker {
 	 * @param channelName
 	 * @return
 	 */
-	public TopicChannel getChannel(String channelName) {
+	public Channel getChannel(String channelName) {
 		return channelMap.get(channelName);
 	}
 	
@@ -81,7 +81,7 @@ public class ChannelWorker {
 	 */
 	public List<String> getChannelList() {
 		List<String> channelList = new ArrayList<>();
-		for (TopicChannel chl : channelMap.values()) {
+		for (Channel chl : channelMap.values()) {
 			channelList.add(chl.getName());
 		}
 		return channelList;
