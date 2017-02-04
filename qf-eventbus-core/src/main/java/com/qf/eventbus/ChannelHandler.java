@@ -23,9 +23,9 @@ public interface ChannelHandler<T extends AbstractChannel> {
 	/**
 	 * 设置分发器
 	 * 
-	 * @param dispatcher
+	 * @param dispatcherType
 	 */
-	public void setDispatcher(Dispatcher dispatcher);
+	public void setDispatcher(Dispatcher.Type dispatcherType);
 	
 	/**
 	 * 开启频道

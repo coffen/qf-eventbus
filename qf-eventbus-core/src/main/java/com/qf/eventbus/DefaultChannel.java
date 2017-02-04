@@ -3,8 +3,6 @@ package com.qf.eventbus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.qf.eventbus.dispatcher.MutilDispatcher;
-
 /**
  * 
  * <p>
@@ -33,11 +31,9 @@ public class DefaultChannel extends AbstractChannel {
 	
 	private int status = STATUS_UNSTART;
 	
-	public DefaultChannel() {
-		holder = new ChannelHolder();
-	}
+	public DefaultChannel() {}
 	
-	public void setDispatcher(Dispatcher dispatcher) {
+	public void setDispatcher(Dispatcher.Type type) {
 		if (status == STATUS_OPEN) {
 			log.error("运行期不允许设置分发器");
 			return;
@@ -46,7 +42,7 @@ public class DefaultChannel extends AbstractChannel {
 			log.error("分发器为空, 设置失败");
 			return;
 		}
-		this.dispatcher = dispatcher;
+		buildDispatcher(type);
 	}
 	
 	public boolean open() {
@@ -55,7 +51,7 @@ public class DefaultChannel extends AbstractChannel {
 			return false;
 		}
 		if (dispatcher == null) {
-			dispatcher = new MutilDispatcher();
+			buildDispatcher(null);
 		}
 		return true;
 	}

@@ -38,7 +38,7 @@ public interface BusManager {
 	 * @param channel
 	 * @return
 	 */
-	public Sender bindEvent(Class<? extends Event> eventClass, String channel);
+	public Sender bindEvent(String channel);
 
 	/**
 	 * 解除指定频道的绑定

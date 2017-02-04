@@ -1,13 +1,11 @@
 package com.qf.eventbus;
 
-import java.io.Serializable;
-
 /**
  * 
  * <p>
  * Project Name: C2C商城
  * <br>
- * Description: 消息接收器
+ * Description: 消息接收器接口
  * <br>
  * File Name: Receiver.java
  * <br>
@@ -16,44 +14,31 @@ import java.io.Serializable;
  * Company: 杭州偶尔科技有限公司
  * <br>
  * @author 穷奇
- * @create time：2017年1月26日 下午9:12:21 
+ * @create time：2017年2月4日 上午10:47:54 
  * @version: v1.0
  *
  */
-public class Receiver implements Serializable {
+public interface Receiver {
 	
-	private static final long serialVersionUID = 2746998704184626286L;
+	/**
+	 * 获取接收器ID
+	 * 
+	 * @return
+	 */
+	public String getId();
 	
-	private String id;	
-	private String channel;
+	/**
+	 * 获取频道
+	 * 
+	 * @return
+	 */
+	public String getChannel();
 	
-	private Listener listener;
-	
-	public Receiver(String rid, String channel) {
-		this.id = rid;
-		this.channel = channel;
-	}
-	
-	public String getId() {
-		return id;
-	}
-	
-	public String getChannel() {
-		return channel;
-	}
-	
-	public void setListener(Listener listener) {
-		this.listener = listener;
-	}
-	
-	public Listener getListener() {
-		return listener;
-	}
-	
-	public <T> void receive(ActionData<T> data) {
-		if (listener != null) {
-			listener.onEvent(data);
-		}
-	}
-	
+	/**
+	 * 接受消息
+	 * 
+	 * @param data
+	 */
+	public <T> void receive(ActionData<T> data);
+
 }

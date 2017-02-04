@@ -1,5 +1,6 @@
 package com.qf.eventbus.dispatcher;
 
+import com.qf.eventbus.AbstractChannel;
 import com.qf.eventbus.ActionData;
 import com.qf.eventbus.Dispatcher;
 
@@ -22,6 +23,10 @@ import com.qf.eventbus.Dispatcher;
  *
  */
 public class RandomDispatcher extends Dispatcher {
+	
+	public RandomDispatcher(AbstractChannel channel) {
+		super(channel);
+	}
 
 	@Override
 	public <T> void dispatch(ActionData<T> data) {

@@ -1,13 +1,11 @@
 package com.qf.eventbus;
 
-import java.io.Serializable;
-
 /**
  * 
  * <p>
  * Project Name: C2C商城
  * <br>
- * Description: 消息发布器
+ * Description: 消息发送器接口
  * <br>
  * File Name: Sender.java
  * <br>
@@ -16,41 +14,30 @@ import java.io.Serializable;
  * Company: 杭州偶尔科技有限公司
  * <br>
  * @author 穷奇
- * @create time：2017年1月26日 下午9:12:38 
+ * @create time：2017年2月4日 上午10:26:29 
  * @version: v1.0
  *
  */
-public class Sender implements Serializable {
-
-	private static final long serialVersionUID = 6414438134186349922L;
+public interface Sender {
 	
-	private String id;	
-	private Class<? extends Event> eventClass;
-	private String channel;
+	/**
+	 * 获取发送器Id
+	 * 
+	 * @return
+	 */
+	public String getId();
 	
-	private Dispatcher dispatcher;
+	/**
+	 * 获取频道
+	 * 
+	 * @return
+	 */
+	public String getChannel();
 	
-	public Sender(String sid, Class<? extends Event> eventClass, String channel, Dispatcher dispatcher) {
-		this.id = sid;
-		this.eventClass = eventClass;
-		this.channel = channel;
-		this.dispatcher = dispatcher;
-	}
-	
-	public String getId() {
-		return id;
-	}
-	
-	public Class<? extends Event> getEvent() {
-		return eventClass;
-	}
-	
-	public String getChannel() {
-		return channel;
-	}
-	
-	public <T> void send(ActionData<T> data) {
-		dispatcher.submit(data);
-	}
-	
+	/**
+	 * 发送消息
+	 * 
+	 * @param data
+	 */
+	public <T> void send(ActionData<T> data);
 }

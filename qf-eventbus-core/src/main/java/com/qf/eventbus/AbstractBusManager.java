@@ -32,12 +32,14 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 	
 	private ChannelWorker worker = new ChannelWorker();
-	protected EventSignaler mainSignaler = new EventSignaler();
+	
+	private SenderFactory senderFactory;
+	private ReceiverFactory receiverFactory;
 	
 	@Override
 	public <T extends AbstractChannel> ChannelHandler<T> buildChannel(String name, Class<T> clazz) {
 		ChannelHandler<T> handler = null;
-		T t = worker.build(name, clazz);
+		T t = worker.build(name, clazz, senderFactory, receiverFactory);
 		if (t != null) {
 			handler = buildChannelHandlerProxy(t);
 		}
@@ -45,13 +47,13 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 	}
 	
 	@Override
-	public Sender bindEvent(Class<? extends Event> eventClass, String channel) {
+	public Sender bindEvent(String channel) {
 		Channel chl = worker.getChannel(channel);
 		if (chl == null) {
 			log.error("绑定频道错误, 频道{}不存在", channel);
 			return null;
 		}
-		return chl.buildSender(eventClass);
+		return chl.buildSender();
 	}
 	
 	@Override

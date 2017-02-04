@@ -30,10 +30,9 @@ public interface Channel {
 	/**
 	 * 创建消息发送器
 	 * 
-	 * @param eventClass
 	 * @return
 	 */
-	public Sender buildSender(Class<? extends Event> eventClass);
+	public Sender buildSender();
 	
 	/**
 	 * 根据SenderId获取消息发送器
@@ -73,5 +72,19 @@ public interface Channel {
 	 * @return
 	 */
 	public void cancelReceiver(String rid);
+	
+	/**
+	 * 设置SenderFactory
+	 * 
+	 * @param factory
+	 */
+	public void setSenderFactory(SenderFactory factory);
+	
+	/**
+	 * 设置ReceiverFactory
+	 * 
+	 * @param factory
+	 */
+	public void setReceiverFactory(ReceiverFactory factory);
 
 }

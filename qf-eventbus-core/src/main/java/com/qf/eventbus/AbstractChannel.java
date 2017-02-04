@@ -1,6 +1,9 @@
 package com.qf.eventbus;
 
-import java.util.UUID;
+import com.qf.eventbus.Dispatcher.Type;
+import com.qf.eventbus.dispatcher.MutilDispatcher;
+import com.qf.eventbus.dispatcher.OrderedDispatcher;
+import com.qf.eventbus.dispatcher.RandomDispatcher;
 
 /**
  * 
@@ -25,20 +28,27 @@ public abstract class AbstractChannel implements Channel, ChannelHandler<Abstrac
 	public final static String TOKEN_PUBLISHER = "Pub";
 	public final static String TOKEN_SUBSCRIBER = "Sub";
 	
+	protected ChannelHolder holder = new ChannelHolder();
+	protected Dispatcher dispatcher;
+	
 	private String name;
 	
-	protected Dispatcher dispatcher;
-	protected ChannelHolder holder;
+	private SenderFactory senderFactory;
+	private ReceiverFactory receiverFactory;
+	
+	private Class<? extends Sender> senderClazz;
+	private Class<? extends Receiver> receiverClazz;
 	
 	public String getName() {
 		return name;
 	}
 	
 	@Override
-	public Sender buildSender(Class<? extends Event> eventClass) {
-		String sid = TOKEN_PUBLISHER + UUID.randomUUID().toString().replace("-", "");
-		Sender sender = new Sender(sid, eventClass, getName(), dispatcher);
-		holder.addSender(sender);
+	public Sender buildSender() {
+		Sender sender = senderFactory.create(senderClazz, name, dispatcher);
+		if (sender != null) {
+			holder.addSender(sender);
+		}
 		return sender;
 	}
 	
@@ -54,9 +64,10 @@ public abstract class AbstractChannel implements Channel, ChannelHandler<Abstrac
 	
 	@Override
 	public Receiver buildReceiver() {
-		String rid = TOKEN_SUBSCRIBER + UUID.randomUUID().toString().replace("-", "");
-		Receiver receiver = new Receiver(rid, getName());
-		holder.addReceiver(receiver);
+		Receiver receiver = receiverFactory.create(receiverClazz, name);
+		if (receiver != null) {
+			holder.addReceiver(receiver);
+		}
 		return receiver;
 	}
 	
@@ -72,6 +83,28 @@ public abstract class AbstractChannel implements Channel, ChannelHandler<Abstrac
 	
 	public ChannelHolder getHolder() {
 		return holder;
+	}
+	
+	@Override
+	public void setSenderFactory(SenderFactory factory) {
+		this.senderFactory = factory;		
+	}
+	
+	@Override
+	public void setReceiverFactory(ReceiverFactory factory) {
+		this.receiverFactory = factory;		
+	}
+	
+	protected void buildDispatcher(Type dispatcherType) {
+		if (dispatcherType == Dispatcher.Type.ORDERED) {
+			this.dispatcher = new OrderedDispatcher(this);
+		}
+		else if (dispatcherType == Dispatcher.Type.RANDOM){
+			this.dispatcher = new RandomDispatcher(this);
+		}
+		else {
+			this.dispatcher = new MutilDispatcher(this);
+		}
 	}
 
 }

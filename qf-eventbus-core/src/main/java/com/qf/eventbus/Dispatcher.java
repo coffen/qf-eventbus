@@ -31,15 +31,17 @@ public abstract class Dispatcher {
 	private AbstractChannel channel;
 	private Executor executor;
 	
-	protected ChannelHolder holder;
+	private ChannelHolder holder;
 	
-	public Dispatcher() {
+	public Dispatcher(AbstractChannel channel) {
+		this.channel = channel;
+		this.holder = channel.getHolder();
+		
 		this.executor = new SingleExecutor(this);
 	}
 	
-	public void setChannel(AbstractChannel channel) {
-		this.channel = channel;
-		this.holder = channel.getHolder();
+	public ChannelHolder getHolder() {
+		return this.holder;
 	}
 	
 	/**
@@ -73,5 +75,10 @@ public abstract class Dispatcher {
 	 * @param data
 	 */
 	public abstract <T> void dispatch(ActionData<T> data);
+	
+	// 分发器类型
+	public static enum Type {		
+		MUTIL, ORDERED, RANDOM;
+	}
 
 }

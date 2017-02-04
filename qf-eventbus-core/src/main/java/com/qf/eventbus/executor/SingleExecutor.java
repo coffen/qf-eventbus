@@ -16,7 +16,7 @@ import com.qf.eventbus.Executor;
  * <p>
  * Project Name: C2C商城
  * <br>
- * Description: 单一线程池
+ * Description: 简单线程池
  * <br>
  * File Name: SingleExecutor.java
  * <br>
