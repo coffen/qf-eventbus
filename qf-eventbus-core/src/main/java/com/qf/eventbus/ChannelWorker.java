@@ -32,6 +32,9 @@ public class ChannelWorker {
 	
 	private final ConcurrentHashMap<String, Channel> channelMap = new ConcurrentHashMap<String, Channel>();
 	
+	private SenderFactory senderFactory = new SenderFactory();
+	private ReceiverFactory receiverFactory = new ReceiverFactory();
+	
 	/**
 	 * 根据频道名称和类别创建频道, 配置默认工厂
 	 * 
@@ -39,21 +42,8 @@ public class ChannelWorker {
 	 * @param channelClazz
 	 * @return
 	 */
-	public <T extends AbstractChannel> T build(String channelName, Class<T> channelClazz) {
-		return build(channelName, channelClazz, null, null);
-	}
-	
-	/**
-	 * 根据频道名称和类别创建频道, 设置Sender工厂和Receiver工厂
-	 * 
-	 * <p>如果名称已经存在且类别相同则返回对应的频道, 如果名称存在但类型不同, 则返回null
-	 * 
-	 * @param channelName
-	 * @param type
-	 * @return
-	 */
 	@SuppressWarnings("unchecked")
-	public <T extends AbstractChannel> T build(String channelName, Class<T> channelClazz, SenderFactory sf, ReceiverFactory rf) {
+	public <T extends AbstractChannel> T build(String channelName, Class<T> channelClazz) {
 		T channel = null;
 		if (StringUtils.isBlank(channelName)) {
 			log.error("创建频道失败, 频道名称为空");
@@ -66,8 +56,8 @@ public class ChannelWorker {
 		try {
 			Channel chl = channelMap.putIfAbsent(channelName, channelClazz.newInstance());
 			if (chl != null && chl.getClass() == channelClazz) {
-				chl.setSenderFactory(sf == null ? new SenderFactory() : sf);
-				chl.setReceiverFactory(rf == null ? new ReceiverFactory() : rf);
+				chl.setSenderFactory(senderFactory);
+				chl.setReceiverFactory(receiverFactory);
 				channel = (T)chl;
 			}
 		}

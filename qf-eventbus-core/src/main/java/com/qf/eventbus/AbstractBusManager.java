@@ -33,13 +33,10 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 	
 	private ChannelWorker worker = new ChannelWorker();
 	
-	private SenderFactory senderFactory;
-	private ReceiverFactory receiverFactory;
-	
 	@Override
 	public <T extends AbstractChannel> ChannelHandler<T> buildChannel(String name, Class<T> clazz) {
 		ChannelHandler<T> handler = null;
-		T t = worker.build(name, clazz, senderFactory, receiverFactory);
+		T t = worker.build(name, clazz);
 		if (t != null) {
 			handler = buildChannelHandlerProxy(t);
 		}
