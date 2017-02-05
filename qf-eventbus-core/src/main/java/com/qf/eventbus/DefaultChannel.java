@@ -26,13 +26,13 @@ public class DefaultChannel extends AbstractChannel {
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 	
 	private final static int STATUS_UNSTART = 1;
-	private final static int STATUS_OPEN = 1 << 1;
+	private final static int STATUS_RUNNING = 1 << 1;
 	private final static int STATUS_CLOSE = 1 << 2;
 	
 	private int status = STATUS_UNSTART;
 	
 	public void setDispatcher(Dispatcher.Type type) {
-		if (status == STATUS_OPEN) {
+		if (status == STATUS_RUNNING) {
 			log.error("运行期不允许设置分发器");
 			return;
 		}
@@ -44,17 +44,23 @@ public class DefaultChannel extends AbstractChannel {
 	}
 	
 	public void open() {
-		if (status == STATUS_OPEN || status == STATUS_CLOSE) {
+		if (status == STATUS_RUNNING || status == STATUS_CLOSE) {
 			log.error("频道已打开或已关闭");
 			return;
 		}
 		if (dispatcher == null) {
 			buildDispatcher(null);
 		}
+		status = STATUS_RUNNING;
 	}
 	
 	public void close(boolean igoreMsg) {
-		// TODO
+		status = STATUS_CLOSE;
+	}
+	
+	@Override
+	public boolean isOpen() {
+		return status == STATUS_RUNNING;
 	}
 
 	@Override

@@ -52,8 +52,12 @@ public abstract class AbstractChannel implements Channel, ChannelHandler<Abstrac
 	
 	public ChannelPublisher register(RegistryInfo info) {
 		ChannelPublisher publisher = null;
+		if (!isOpen()) {
+			log.error("频道未开启或已关闭: channel={}", name);
+			return publisher;
+		}
 		if (!checkRegistryInfo(info)) {
-			log.error("注册请求无效: info={}", info);
+			log.error("注册请求无效: channel={}, info={}", name, info);
 			return publisher;
 		}
 		Sender sender = senderFactory.buildSender(name);
@@ -75,6 +79,10 @@ public abstract class AbstractChannel implements Channel, ChannelHandler<Abstrac
 	
 	public ChannelSubscriber subscribe() {
 		ChannelSubscriber subscriber = null;
+		if (!isOpen()) {
+			log.error("频道未开启或已关闭: channel={}", name);
+			return subscriber;
+		}
 		Receiver receiver = receiverFactory.buildReceiver(name);
 		if (receiver != null) {
 			try {
@@ -93,6 +101,10 @@ public abstract class AbstractChannel implements Channel, ChannelHandler<Abstrac
 	}
 	
 	public boolean unRegister(String sid) {
+		if (!isOpen()) {
+			log.error("频道未开启或已关闭: channel={}", name);
+			return false;
+		}
 		Sender sender = holder.removeSender(sid);
 		if (sender != null) {
 			sender.destroy();
@@ -102,6 +114,10 @@ public abstract class AbstractChannel implements Channel, ChannelHandler<Abstrac
 	}
 	
 	public boolean unSubscribe(String rid) {
+		if (!isOpen()) {
+			log.error("频道未开启或已关闭: channel={}", name);
+			return false;
+		}
 		Receiver receiver = holder.removeReceiver(rid);
 		if (receiver != null) {
 			receiver.destroy();
@@ -119,7 +135,9 @@ public abstract class AbstractChannel implements Channel, ChannelHandler<Abstrac
 	}
 	
 	public <T> void send(ActionData<T> data) {
-		dispatcher.submit(data);
+		if (isOpen()) {
+			dispatcher.submit(data);
+		}
 	}
 	
 	protected void buildDispatcher(Dispatcher.Type dispatcherType) {

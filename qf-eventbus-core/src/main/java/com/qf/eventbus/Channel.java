@@ -28,6 +28,13 @@ public interface Channel {
 	public String getName();
 	
 	/**
+	 * 频道是否开启
+	 * 
+	 * @return
+	 */
+	public boolean isOpen();
+	
+	/**
 	 * 注册发布者
 	 * 
 	 * @param info
