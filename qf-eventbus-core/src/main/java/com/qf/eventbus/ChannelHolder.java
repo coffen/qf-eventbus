@@ -4,12 +4,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * 
  * <p>
  * Project Name: C2C商城
  * <br>
- * Description: 频道容器
+ * Description: 频道发布者、订阅者容器
  * <br>
  * File Name: ChannelHolder.java
  * <br>
@@ -40,7 +42,7 @@ public class ChannelHolder {
 	}	
 	
 	public void addSender(Sender sender) {
-		if (sender != null) {
+		if (sender != null && StringUtils.isNotBlank(sender.getId())) {
 			senderMap.put(sender.getId(), sender);
 		}
 	}

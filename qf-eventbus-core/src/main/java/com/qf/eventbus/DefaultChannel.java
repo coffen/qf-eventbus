@@ -31,8 +31,6 @@ public class DefaultChannel extends AbstractChannel {
 	
 	private int status = STATUS_UNSTART;
 	
-	public DefaultChannel() {}
-	
 	public void setDispatcher(Dispatcher.Type type) {
 		if (status == STATUS_OPEN) {
 			log.error("运行期不允许设置分发器");
@@ -45,21 +43,23 @@ public class DefaultChannel extends AbstractChannel {
 		buildDispatcher(type);
 	}
 	
-	public boolean open() {
+	public void open() {
 		if (status == STATUS_OPEN || status == STATUS_CLOSE) {
 			log.error("频道已打开或已关闭");
-			return false;
+			return;
 		}
 		if (dispatcher == null) {
 			buildDispatcher(null);
 		}
-		return true;
 	}
 	
 	public void close(boolean igoreMsg) {
 		// TODO
-		holder = null;
-		dispatcher = null;
+	}
+
+	@Override
+	public boolean checkRegistryInfo(RegistryInfo info) {
+		return true;
 	}
 
 }

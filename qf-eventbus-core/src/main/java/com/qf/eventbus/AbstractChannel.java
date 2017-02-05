@@ -1,6 +1,8 @@
 package com.qf.eventbus;
 
-import com.qf.eventbus.Dispatcher.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.qf.eventbus.dispatcher.MutilDispatcher;
 import com.qf.eventbus.dispatcher.OrderedDispatcher;
 import com.qf.eventbus.dispatcher.RandomDispatcher;
@@ -25,77 +27,102 @@ import com.qf.eventbus.dispatcher.RandomDispatcher;
  */
 public abstract class AbstractChannel implements Channel, ChannelHandler<AbstractChannel> {
 	
+	private final Logger log = LoggerFactory.getLogger(this.getClass());
+	
 	public final static String TOKEN_PUBLISHER = "Pub";
 	public final static String TOKEN_SUBSCRIBER = "Sub";
+	
+	private SenderFactory senderFactory = new SenderFactory();
+	private ReceiverFactory receiverFactory = new ReceiverFactory();
 	
 	protected ChannelHolder holder = new ChannelHolder();
 	protected Dispatcher dispatcher;
 	
 	private String name;
 	
-	private SenderFactory senderFactory;
-	private ReceiverFactory receiverFactory;
-	
-	private Class<? extends Sender> senderClazz;
-	private Class<? extends Receiver> receiverClazz;
+	public AbstractChannel() {}
 	
 	public String getName() {
 		return name;
-	}
-	
-	@Override
-	public Sender buildSender() {
-		Sender sender = senderFactory.create(senderClazz, name, dispatcher);
-		if (sender != null) {
-			holder.addSender(sender);
-		}
-		return sender;
-	}
-	
-	@Override
-	public Sender getSender(String sid) {
-		return holder.getSender(sid);
-	}
-	
-	@Override
-	public void cancelSender(String sid) {
-		holder.removeSender(sid);
-	}
-	
-	@Override
-	public Receiver buildReceiver() {
-		Receiver receiver = receiverFactory.create(receiverClazz, name);
-		if (receiver != null) {
-			holder.addReceiver(receiver);
-		}
-		return receiver;
-	}
-	
-	@Override
-	public Receiver getReceiver(String rid) {
-		return holder.getReceiver(rid);
-	}
-	
-	@Override
-	public void cancelReceiver(String rid) {
-		holder.removeReceiver(rid);
 	}
 	
 	public ChannelHolder getHolder() {
 		return holder;
 	}
 	
-	@Override
-	public void setSenderFactory(SenderFactory factory) {
-		this.senderFactory = factory;		
+	public ChannelPublisher register(RegistryInfo info) {
+		ChannelPublisher publisher = null;
+		if (!checkRegistryInfo(info)) {
+			log.error("注册请求无效: info={}", info);
+			return publisher;
+		}
+		Sender sender = senderFactory.buildSender(name);
+		if (sender != null) {
+			try {
+				sender.setChannel(this);
+				publisher = senderFactory.buildSenderProxy(sender);
+				holder.addSender(sender);
+			}
+			catch (Exception e) {
+				log.error("创建发布者代理失败", e);
+			}
+		}
+		else {
+			log.error("创建Sender失败: info={}", info);
+		}
+		return publisher;
 	}
 	
-	@Override
-	public void setReceiverFactory(ReceiverFactory factory) {
-		this.receiverFactory = factory;		
+	public ChannelSubscriber subscribe() {
+		ChannelSubscriber subscriber = null;
+		Receiver receiver = receiverFactory.buildReceiver(name);
+		if (receiver != null) {
+			try {
+				receiver.setChannel(this);
+				subscriber = receiverFactory.buildReceiverProxy(receiver);
+				holder.addReceiver(receiver);
+			}
+			catch (Exception e) {
+				log.error("创建订阅者代理失败", e);
+			}
+		}
+		else {
+			log.error("创建Receiver失败");
+		}
+		return subscriber;
 	}
 	
-	protected void buildDispatcher(Type dispatcherType) {
+	public boolean unRegister(String sid) {
+		Sender sender = holder.removeSender(sid);
+		if (sender != null) {
+			sender.destroy();
+			sender = null;
+		}
+		return true;
+	}
+	
+	public boolean unSubscribe(String rid) {
+		Receiver receiver = holder.removeReceiver(rid);
+		if (receiver != null) {
+			receiver.destroy();
+			receiver = null;
+		}
+		return true;
+	}
+	
+	public Sender getSender(String sid) {
+		return holder.getSender(sid);
+	}
+	
+	public Receiver getReceiver(String rid) {
+		return holder.getReceiver(rid);
+	}
+	
+	public <T> void send(ActionData<T> data) {
+		dispatcher.submit(data);
+	}
+	
+	protected void buildDispatcher(Dispatcher.Type dispatcherType) {
 		if (dispatcherType == Dispatcher.Type.ORDERED) {
 			this.dispatcher = new OrderedDispatcher(this);
 		}
@@ -106,5 +133,8 @@ public abstract class AbstractChannel implements Channel, ChannelHandler<Abstrac
 			this.dispatcher = new MutilDispatcher(this);
 		}
 	}
+	
+	// 验证注册者合法性
+	public abstract boolean checkRegistryInfo(RegistryInfo info);
 
 }

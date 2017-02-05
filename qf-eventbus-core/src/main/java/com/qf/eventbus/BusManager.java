@@ -23,46 +23,12 @@ import java.util.List;
 public interface BusManager {
 	
 	/**
-	 * 创建渠道
+	 * 创建频道
 	 * 
 	 * @param name
-	 * @param clazz
 	 * @return
 	 */
-	public <T extends AbstractChannel> ChannelHandler<T> buildChannel(String name, Class<T> clazz);
-	
-	/**
-	 * 绑定事件到指定频道
-	 * 
-	 * @param eventClass
-	 * @param channel
-	 * @return
-	 */
-	public Sender bindEvent(String channel);
-
-	/**
-	 * 解除指定频道的绑定
-	 * 
-	 * @param sid
-	 * @param channel
-	 */
-	public void unbindEvent(String sid, String channel);
-	
-	/**
-	 * 订阅事件
-	 * 
-	 * @param channel
-	 * @return
-	 */
-	public Receiver subscribe(String channel);
-	
-	/**
-	 * 取消订阅
-	 * 
-	 * @param rid
-	 * @param channel
-	 */
-	public void unSubscribe(String rid, String channel);
+	public <T extends AbstractChannel> ChannelHandler<T> buildChannel(String name);
 	
 	/**
 	 * 查询全部频道列表

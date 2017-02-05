@@ -79,7 +79,6 @@ public class SingleExecutor implements Executor {
     
     private ThreadPoolExecutor threadExecutor;
 
-	@Override
 	public <T> void submit(final ActionData<T> data) {
 		threadExecutor.submit(new Runnable() {			
 			public void run() {
@@ -88,7 +87,6 @@ public class SingleExecutor implements Executor {
 		});
 	}
 
-	@Override
 	public int getAvailableTask() {
 		return threadExecutor.getQueue().size();
 	}

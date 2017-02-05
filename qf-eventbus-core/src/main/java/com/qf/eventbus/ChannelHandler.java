@@ -29,10 +29,8 @@ public interface ChannelHandler<T extends AbstractChannel> {
 	
 	/**
 	 * 开启频道
-	 * 
-	 * @return
 	 */
-	public boolean open();
+	public void open();
 	
 	/**
 	 * 关闭频道

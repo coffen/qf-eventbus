@@ -28,7 +28,6 @@ public class OrderedDispatcher extends Dispatcher {
 		super(channel);
 	}
 
-	@Override
 	public <T> void dispatch(ActionData<T> data) {
 		
 	}

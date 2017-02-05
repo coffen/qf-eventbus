@@ -28,7 +28,6 @@ public class MutilDispatcher extends Dispatcher {
 		super(channel);
 	}
 
-	@Override
 	public <T> void dispatch(ActionData<T> data) {
 		
 	}

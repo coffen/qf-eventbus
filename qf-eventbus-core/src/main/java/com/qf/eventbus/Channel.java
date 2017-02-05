@@ -28,63 +28,18 @@ public interface Channel {
 	public String getName();
 	
 	/**
-	 * 创建消息发送器
+	 * 注册发布者
+	 * 
+	 * @param info
+	 * @return
+	 */
+	public ChannelPublisher register(RegistryInfo info);
+	
+	/**
+	 * 订阅频道
 	 * 
 	 * @return
 	 */
-	public Sender buildSender();
-	
-	/**
-	 * 根据SenderId获取消息发送器
-	 * 
-	 * @param sid
-	 * @return
-	 */
-	public Sender getSender(String sid);
-	
-	/**
-	 * 注销消息发送器
-	 * 
-	 * @param sid
-	 * @return
-	 */
-	public void cancelSender(String sid);
-	
-	/**
-	 * 创建消息接收器
-	 * 
-	 * @return
-	 */
-	public Receiver buildReceiver();
-	
-	/**
-	 * 根据ReceiverId获取消息接收器
-	 * 
-	 * @param rid
-	 * @return
-	 */
-	public Receiver getReceiver(String rid);
-	
-	/**
-	 * 注销消息接收器
-	 * 
-	 * @param sid
-	 * @return
-	 */
-	public void cancelReceiver(String rid);
-	
-	/**
-	 * 设置SenderFactory
-	 * 
-	 * @param factory
-	 */
-	public void setSenderFactory(SenderFactory factory);
-	
-	/**
-	 * 设置ReceiverFactory
-	 * 
-	 * @param factory
-	 */
-	public void setReceiverFactory(ReceiverFactory factory);
+	public ChannelSubscriber subscribe();
 
 }

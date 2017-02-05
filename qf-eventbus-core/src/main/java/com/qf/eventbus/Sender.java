@@ -1,11 +1,16 @@
 package com.qf.eventbus;
 
+import java.util.concurrent.locks.ReentrantLock;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * 
  * <p>
  * Project Name: C2C商城
  * <br>
- * Description: 消息发送器接口
+ * Description: 消息发布器
  * <br>
  * File Name: Sender.java
  * <br>
@@ -14,30 +19,49 @@ package com.qf.eventbus;
  * Company: 杭州偶尔科技有限公司
  * <br>
  * @author 穷奇
- * @create time：2017年2月4日 上午10:26:29 
+ * @create time：2017年2月5日 下午3:46:06 
  * @version: v1.0
  *
  */
-public interface Sender {
+public class Sender extends AbstractChannelRegistry implements ChannelPublisher {
 	
-	/**
-	 * 获取发送器Id
-	 * 
-	 * @return
-	 */
-	public String getId();
+	private final Logger log = LoggerFactory.getLogger(this.getClass());
 	
-	/**
-	 * 获取频道
-	 * 
-	 * @return
-	 */
-	public String getChannel();
+	private AbstractChannel channel;
 	
-	/**
-	 * 发送消息
-	 * 
-	 * @param data
-	 */
-	public <T> void send(ActionData<T> data);
+	private ReentrantLock lock = new ReentrantLock();
+
+	public Sender(String id, String channel) {
+		super(id, channel);
+	}
+	
+	public void setChannel(AbstractChannel channel) {
+		this.channel = channel;
+	}
+
+	public boolean unRegister() {
+		if (isValid()) {
+			lock.lock();
+			if (isValid()) {
+				boolean result = channel.unRegister(getId());
+				if (result) {
+					setValid(false);
+					log.error("注销发布器成功: sid={}", getId());
+				}
+			}
+			lock.unlock();
+		}
+		return !isValid();
+	}
+
+	public <T> void send(ActionData<T> data) {
+		if (!isValid()) {
+			log.error("当前注册已失效");
+			return;
+		}
+		channel.send(data);
+	}
+	
+	public void destroy() {}
+
 }

@@ -5,40 +5,38 @@ package com.qf.eventbus;
  * <p>
  * Project Name: C2C商城
  * <br>
- * Description: 消息主体
+ * Description: 频道注册
  * <br>
- * File Name: ActionData.java
+ * File Name: ChannelRegistry.java
  * <br>
  * Copyright: Copyright (C) 2015 All Rights Reserved.
  * <br>
  * Company: 杭州偶尔科技有限公司
  * <br>
  * @author 穷奇
- * @create time：2017年1月25日 下午8:34:53 
+ * @create time：2017年2月5日 下午3:14:00 
  * @version: v1.0
  *
  */
-public interface ActionData<T> {
+public interface ChannelRegistry {
 	
 	/**
-	 * 获取频道
+	 * 获取注册Id
+	 * 
+	 * @return
+	 */
+	public String getId();
+	
+	/**
+	 * 获取频道名称
 	 * 
 	 * @return
 	 */
 	public String getChannel();
 	
 	/**
-	 * 获取发送器序列号
-	 * 
-	 * @return
+	 * 销毁注册信息
 	 */
-	public String getRegistryId();
-	
-	/**
-	 * 获取数据
-	 * 
-	 * @return
-	 */
-	public T getData();
-	
+	public void destroy();
+
 }

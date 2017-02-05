@@ -1,6 +1,7 @@
 package com.qf.eventbus;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -32,9 +33,6 @@ public class ChannelWorker {
 	
 	private final ConcurrentHashMap<String, Channel> channelMap = new ConcurrentHashMap<String, Channel>();
 	
-	private SenderFactory senderFactory = new SenderFactory();
-	private ReceiverFactory receiverFactory = new ReceiverFactory();
-	
 	/**
 	 * 根据频道名称和类别创建频道, 配置默认工厂
 	 * 
@@ -54,27 +52,19 @@ public class ChannelWorker {
 			return channel;
 		}
 		try {
+			Channel created = channelClazz.newInstance();
 			Channel chl = channelMap.putIfAbsent(channelName, channelClazz.newInstance());
-			if (chl != null && chl.getClass() == channelClazz) {
-				chl.setSenderFactory(senderFactory);
-				chl.setReceiverFactory(receiverFactory);
+			if (chl != null && chl == created) {
 				channel = (T)chl;
+			}
+			else {
+				log.error("创建频道失败, 该频道已经存在: channelName={}", channelName);
 			}
 		}
 		catch (Exception e) {
 			log.error("创建频道失败, 初始化频道类失败", e);
 		}
 		return channel;
-	}
-	
-	/**
-	 * 根据频道名称获取频道
-	 * 
-	 * @param channelName
-	 * @return
-	 */
-	public Channel getChannel(String channelName) {
-		return channelMap.get(channelName);
 	}
 	
 	/**
