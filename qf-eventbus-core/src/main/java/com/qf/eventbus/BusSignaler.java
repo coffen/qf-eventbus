@@ -45,9 +45,9 @@ public class BusSignaler {
 	
 	private final Map<String, ChannelHandler<? extends AbstractChannel>> handlerMapping = new HashMap<String, ChannelHandler<? extends AbstractChannel>>();
 	
-	private AbstractBusManager busManager;
+	private BusManager busManager;
 	
-	public BusSignaler(AbstractBusManager busManager) {
+	public BusSignaler(BusManager busManager) {
 		this.busManager = busManager;
 	}
 	

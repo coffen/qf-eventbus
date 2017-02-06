@@ -31,6 +31,22 @@ public interface BusManager {
 	public <T extends AbstractChannel> ChannelHandler<T> buildChannel(CreateRequest request);
 	
 	/**
+	 * 注册发布者到频道
+	 * 
+	 * @param request
+	 * @return
+	 */
+	public ChannelPublisher registe(RegisteRequest request);
+	
+	/**
+	 * 注册订阅者到频道
+	 * 
+	 * @param request
+	 * @return
+	 */
+	public ChannelSubscriber subscribe(SubscribeRequest request);
+	
+	/**
 	 * 查询全部频道列表
 	 * 
 	 * @return
