@@ -31,8 +31,8 @@ public class Sender extends AbstractChannelRegistry implements ChannelPublisher 
 	
 	private ReentrantLock lock = new ReentrantLock();
 
-	public Sender(String id, String channel) {
-		super(id, channel);
+	public Sender(String signalerId, String channel) {
+		super(signalerId, channel);
 	}
 	
 	public void setChannel(AbstractChannel channel) {
@@ -43,10 +43,10 @@ public class Sender extends AbstractChannelRegistry implements ChannelPublisher 
 		if (isValid()) {
 			lock.lock();
 			if (isValid()) {
-				boolean result = channel.unRegiste(getId());
+				boolean result = channel.unRegiste(getSignalerId());
 				if (result) {
 					setValid(false);
-					log.info("注销发布器成功: sid={}", getId());
+					log.info("注销发布器成功: sid={}", getSignalerId());
 				}
 			}
 			lock.unlock();

@@ -1,8 +1,8 @@
 package com.qf.eventbus;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -26,8 +26,8 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class ChannelHolder {
 	
-	private final Map<String, Sender> senderMap = new HashMap<String, Sender>();
-	private final Map<String, Receiver> receiverMap = new HashMap<String, Receiver>();
+	private final ConcurrentHashMap<String, Sender> senderMap = new ConcurrentHashMap<String, Sender>();
+	private final ConcurrentHashMap<String, Receiver> receiverMap = new ConcurrentHashMap<String, Receiver>();
 	
 	public Map<String, Sender> getSenderMap() {
 		return Collections.unmodifiableMap(senderMap);
@@ -37,32 +37,36 @@ public class ChannelHolder {
 		return Collections.unmodifiableMap(receiverMap);
 	}
 	
-	public Sender getSender(String sid) {
-		return senderMap.get(sid);
+	public Sender getSender(String signalerId) {
+		return senderMap.get(signalerId);
 	}	
 	
-	public void addSender(Sender sender) {
-		if (sender != null && StringUtils.isNotBlank(sender.getId())) {
-			senderMap.put(sender.getId(), sender);
+	public boolean addSender(Sender sender) {
+		if (sender == null || StringUtils.isBlank(sender.getSignalerId())) {
+			return false;
 		}
+		Sender s = senderMap.putIfAbsent(sender.getSignalerId(), sender);
+		return s == sender;
 	}
 	
-	public Sender removeSender(String sid) {
-		return senderMap.remove(sid);
+	public Sender removeSender(String signalerId) {
+		return senderMap.remove(signalerId);
 	}
 	
-	public Receiver getReceiver(String rid) {
-		return receiverMap.get(rid);
+	public Receiver getReceiver(String signalerId) {
+		return receiverMap.get(signalerId);
 	}
 	
-	public void addReceiver(Receiver receiver) {
-		if (receiver != null) {
-			receiverMap.put(receiver.getId(), receiver);
+	public boolean addReceiver(Receiver receiver) {
+		if (receiver == null || StringUtils.isBlank(receiver.getSignalerId())) {
+			return false;
 		}
+		Receiver r = receiverMap.putIfAbsent(receiver.getSignalerId(), receiver);
+		return r == receiver;
 	}
 	
-	public Receiver removeReceiver(String rid) {
-		return receiverMap.remove(rid);
+	public Receiver removeReceiver(String signalerId) {
+		return receiverMap.remove(signalerId);
 	}
 
 }

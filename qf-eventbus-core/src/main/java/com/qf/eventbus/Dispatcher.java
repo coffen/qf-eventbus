@@ -59,10 +59,10 @@ public abstract class Dispatcher {
 	
 	// 验证消息
 	private <T> boolean checkData(ActionData<T> data) {
-		if (data == null || StringUtils.isBlank(data.getRegistryId())) {
+		if (data == null || StringUtils.isBlank(data.getRegisterId())) {
 			return false;
 		}
-		Sender sender = channel.getSender(data.getRegistryId());
+		Sender sender = channel.getSender(data.getRegisterId());
 		if (sender == null) {
 			return false;
 		}

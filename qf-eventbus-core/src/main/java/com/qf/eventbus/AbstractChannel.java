@@ -1,5 +1,6 @@
 package com.qf.eventbus;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,9 +30,6 @@ public abstract class AbstractChannel implements Channel, ChannelHandler<Abstrac
 	
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 	
-	public final static String TOKEN_PUBLISHER = "Pub";
-	public final static String TOKEN_SUBSCRIBER = "Sub";
-	
 	private SenderFactory senderFactory = new SenderFactory();
 	private ReceiverFactory receiverFactory = new ReceiverFactory();
 	
@@ -50,57 +48,69 @@ public abstract class AbstractChannel implements Channel, ChannelHandler<Abstrac
 		return holder;
 	}
 	
-	public ChannelPublisher register(RegistryInfo info) {
+	public ChannelPublisher registe(RegisteRequest request) {
 		ChannelPublisher publisher = null;
 		if (!isOpen()) {
 			log.error("频道未开启或已关闭: channel={}", name);
 			return publisher;
 		}
-		if (!checkRegistryInfo(info)) {
-			log.error("注册请求无效: channel={}, info={}", name, info);
+		if (!checkRequest(request)) {
+			log.error("注册请求无效: channel={}, request={}", name, request);
 			return publisher;
 		}
-		Sender sender = senderFactory.buildSender(name);
+		Sender sender = senderFactory.buildSender(request.getSignalerId(), name);
 		if (sender != null) {
+			boolean addSucceed = holder.addSender(sender);
+			if (!addSucceed) {
+				log.error("该频道已经注册: signalerId={}, channel={}", request.getSignalerId(), name);
+				return publisher;
+			}
 			try {
 				sender.setChannel(this);
 				publisher = senderFactory.buildSenderProxy(sender);
-				holder.addSender(sender);
 			}
 			catch (Exception e) {
 				log.error("创建发布者代理失败", e);
 			}
 		}
 		else {
-			log.error("创建Sender失败: info={}", info);
+			log.error("创建发布者失败: request={}", request);
 		}
 		return publisher;
 	}
 	
-	public ChannelSubscriber subscribe() {
+	public ChannelSubscriber subscribe(SubscribeRequest request) {
 		ChannelSubscriber subscriber = null;
 		if (!isOpen()) {
 			log.error("频道未开启或已关闭: channel={}", name);
 			return subscriber;
 		}
-		Receiver receiver = receiverFactory.buildReceiver(name);
+		if (!checkRequest(request)) {
+			log.error("订阅请求无效: channel={}, request={}", name, request);
+			return subscriber;
+		}
+		Receiver receiver = receiverFactory.buildReceiver(request.getSignalerId(), name);
 		if (receiver != null) {
+			boolean addSucceed = holder.addReceiver(receiver);
+			if (!addSucceed) {
+				log.error("该频道已经订阅: signalerId={}, channel={}", request.getSignalerId(), name);
+				return subscriber;
+			}
 			try {
 				receiver.setChannel(this);
 				subscriber = receiverFactory.buildReceiverProxy(receiver);
-				holder.addReceiver(receiver);
 			}
 			catch (Exception e) {
 				log.error("创建订阅者代理失败", e);
 			}
 		}
 		else {
-			log.error("创建Receiver失败");
+			log.error("创建订阅者失败");
 		}
 		return subscriber;
 	}
 	
-	public boolean unRegister(String sid) {
+	public boolean unRegiste(String sid) {
 		if (!isOpen()) {
 			log.error("频道未开启或已关闭: channel={}", name);
 			return false;
@@ -153,6 +163,6 @@ public abstract class AbstractChannel implements Channel, ChannelHandler<Abstrac
 	}
 	
 	// 验证注册者合法性
-	public abstract boolean checkRegistryInfo(RegistryInfo info);
+	public abstract <T extends Request> boolean checkRequest(T request);
 
 }

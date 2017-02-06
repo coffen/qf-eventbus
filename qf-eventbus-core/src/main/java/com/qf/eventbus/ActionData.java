@@ -28,11 +28,11 @@ public interface ActionData<T> {
 	public String getChannel();
 	
 	/**
-	 * 获取发送器序列号
+	 * 获取发送器Id
 	 * 
 	 * @return
 	 */
-	public String getRegistryId();
+	public String getRegisterId();
 	
 	/**
 	 * 获取数据

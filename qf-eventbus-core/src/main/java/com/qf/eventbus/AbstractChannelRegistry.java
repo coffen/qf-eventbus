@@ -20,18 +20,18 @@ package com.qf.eventbus;
  */
 public abstract class AbstractChannelRegistry implements ChannelRegistry {
 	
-	private String id;
+	private String signalerId;
 	private String channel;
 	
 	private boolean valid;
 	
-	public AbstractChannelRegistry(String id, String channel) {		
-		this.id = id;
+	public AbstractChannelRegistry(String signalerId, String channel) {		
+		this.signalerId = signalerId;
 		this.channel = channel;
 	}
 	
-	public String getId() {
-		return id;
+	public String getSignalerId() {
+		return signalerId;
 	}
 	
 	public String getChannel() {

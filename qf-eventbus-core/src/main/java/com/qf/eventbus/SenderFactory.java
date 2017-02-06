@@ -3,7 +3,6 @@ package com.qf.eventbus;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -31,21 +30,18 @@ public class SenderFactory {
 	
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 	
-	private final static String ID_PREFIX = "Pub-";
-	
 	/**
 	 * 创建Sender
 	 * 
 	 * @param channel
 	 * @return
 	 */
-	public Sender buildSender(String channel) {
-		if (StringUtils.isBlank(channel)) {
-			log.error("创建发布者失败, 频道参数为空");
+	public Sender buildSender(String signalerId, String channel) {
+		if (StringUtils.isBlank(signalerId) || StringUtils.isBlank(channel)) {
+			log.error("创建发布者失败, 参数为空: signalerId={}, channel={}", signalerId, channel);
 			return null;
 		}
-		String sid = ID_PREFIX + UUID.randomUUID().toString().replace("-", "");
-		return new Sender(sid, channel);
+		return new Sender(signalerId, channel);
 	}
 	
 	/**

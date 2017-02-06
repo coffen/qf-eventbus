@@ -32,8 +32,8 @@ public class Receiver extends AbstractChannelRegistry implements ChannelSubscrib
 	
 	private ReentrantLock lock = new ReentrantLock();
 	
-	public Receiver(String id, String channel) {
-		super(id, channel);
+	public Receiver(String signalerId, String channel) {
+		super(signalerId, channel);
 	}
 	
 	public void setChannel(AbstractChannel channel) {
@@ -49,10 +49,10 @@ public class Receiver extends AbstractChannelRegistry implements ChannelSubscrib
 		if (isValid()) {
 			lock.lock();
 			if (isValid()) {
-				boolean result = channel.unRegiste(getId());
+				boolean result = channel.unRegiste(getSignalerId());
 				if (result) {
 					setValid(false);
-					log.info("取消订阅成功: rid={}", getId());
+					log.info("取消订阅成功: rid={}", getSignalerId());
 				}
 			}
 			lock.unlock();

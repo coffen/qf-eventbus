@@ -21,11 +21,11 @@ package com.qf.eventbus;
 public interface ChannelRegistry {
 	
 	/**
-	 * 获取注册Id
+	 * 获取Id
 	 * 
 	 * @return
 	 */
-	public String getId();
+	public String getSignalerId();
 	
 	/**
 	 * 获取频道名称
