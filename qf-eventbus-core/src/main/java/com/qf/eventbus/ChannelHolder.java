@@ -46,7 +46,7 @@ public class ChannelHolder {
 			return false;
 		}
 		Sender s = senderMap.putIfAbsent(sender.getSignalerId(), sender);
-		return s == sender;
+		return s == null;
 	}
 	
 	public Sender removeSender(String signalerId) {
@@ -62,7 +62,7 @@ public class ChannelHolder {
 			return false;
 		}
 		Receiver r = receiverMap.putIfAbsent(receiver.getSignalerId(), receiver);
-		return r == receiver;
+		return r == null;
 	}
 	
 	public Receiver removeReceiver(String signalerId) {

@@ -4,6 +4,8 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
+import com.qf.eventbus.event.TestEvent;
+
 /**
  * 
  * <p>
@@ -38,6 +40,37 @@ public class BusServer {
 				return method.invoke(manager, args);
 			}
 		});
+	}
+	
+	public static void main(String[] args) {
+		final BusSignaler s = BusServer.buildSignaler();
+		s.buildChannel("test");
+		s.register("test", TestEvent.class);
+		s.subscribe("test", new Listener() {			
+			public <T> void onEvent(ActionData<T> data) {
+				System.out.println(data.getRegisterId() + ":" + data.getData());
+			}
+		});
+		ActionData<String> testData = new ActionData<String>() {	
+			
+			private String word = "Hello, World!";
+			
+			@Override
+			public String getRegisterId() {
+				return s.getSignalerId();
+			}
+			
+			@Override
+			public String getData() {
+				return word;
+			}
+			
+			@Override
+			public String getChannel() {
+				return "test";
+			}
+		};
+		s.fileEvent(TestEvent.class, testData);
 	}
 
 }

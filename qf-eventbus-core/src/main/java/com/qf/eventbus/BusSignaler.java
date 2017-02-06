@@ -95,8 +95,9 @@ public class BusSignaler {
 	private boolean bindEvent(String channel, Class<? extends Event> eventClass) {
 		Set<String> channelSet = channelEventMapping.get(eventClass);
 		if (channelSet == null) {
-			channelSet = channelEventMapping.putIfAbsent(eventClass, new HashSet<String>());
+			channelEventMapping.putIfAbsent(eventClass, new HashSet<String>());
 		}
+		channelSet = channelEventMapping.get(eventClass);
 		channelSet.add(channel);
 		return true;
 	}

@@ -52,9 +52,9 @@ public class ChannelWorker {
 		}
 		try {
 			Channel created = channelClazz.newInstance();
-			Channel chl = channelMap.putIfAbsent(channelName, channelClazz.newInstance());
-			if (chl != null && chl == created) {
-				channel = (T)chl;
+			Channel chl = channelMap.putIfAbsent(channelName, created);
+			if (chl == null) {
+				channel = (T)channelMap.get(channelName);
 			}
 			else {
 				log.error("创建频道失败, 该频道已经存在: channelName={}", channelName);
