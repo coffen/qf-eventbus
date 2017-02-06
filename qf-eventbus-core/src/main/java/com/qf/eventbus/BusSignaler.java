@@ -2,6 +2,7 @@ package com.qf.eventbus;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -9,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.CollectionUtils;
 
 /**
  * 
@@ -126,6 +128,20 @@ public class BusSignaler {
 	private boolean bindListener(ChannelSubscriber subscriber, Listener listener) {
 		subscriber.setListener(listener);
 		return true;
+	}
+	
+	public <T> void fileEvent(Class<? extends Event> eventClass, ActionData<T> data) {
+		Set<String> channelSet = channelEventMapping.get(eventClass);
+		if (CollectionUtils.isEmpty(channelSet)) {
+			Iterator<String> it = channelSet.iterator();
+			while (it.hasNext()) {
+				String channel = it.next();
+				ChannelPublisher publisher = publisherMap.get(channel);
+				if (publisher != null) {
+					publisher.send(data);
+				}
+			}
+		}
 	}
 	
 }
