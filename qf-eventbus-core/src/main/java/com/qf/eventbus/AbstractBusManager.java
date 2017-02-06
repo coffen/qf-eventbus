@@ -6,6 +6,7 @@ import java.lang.reflect.Proxy;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,10 +36,14 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 	private Class<? extends AbstractChannel> channelClass = DefaultChannel.class;
 	
 	@SuppressWarnings("unchecked")
-	public <T extends AbstractChannel> ChannelHandler<T> buildChannel(String name) {
+	public <T extends AbstractChannel> ChannelHandler<T> buildChannel(CreateRequest request) {
 		ChannelHandler<T> handler = null;
+		if (request == null || StringUtils.isBlank(request.getChannel())) {
+			log.error("创建频道错误, 参数为空: request={}", request);
+			return handler;
+		}
 		try {
-			AbstractChannel t = worker.build(name, channelClass);
+			AbstractChannel t = worker.build(request.getChannel(), channelClass);
 			if (t != null) {
 				handler = buildChannelHandlerProxy((T)t);
 			}
@@ -47,6 +52,36 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 			log.error("创建频道失败", e);
 		}
 		return handler;
+	}
+	
+	public ChannelPublisher registe(RegisteRequest request) {
+		ChannelPublisher publisher = null;
+		if (request == null || StringUtils.isBlank(request.getChannel())) {
+			log.error("绑定频道错误, 参数为空: request={}", request);
+			return publisher;
+		}
+		Channel chl = worker.getChannel(request.getChannel());
+		if (chl == null) {
+			log.error("绑定频道错误, 频道{}不存在", request.getChannel());
+			return publisher;
+		}
+		publisher = chl.registe(request);
+		return publisher;
+	}
+	
+	public ChannelSubscriber subscribe(SubscribeRequest request) {
+		ChannelSubscriber subscriber = null;
+		if (request == null || StringUtils.isBlank(request.getChannel())) {
+			log.error("订阅频道错误, 参数为空: request={}", request);
+			return subscriber;
+		}
+		Channel chl = worker.getChannel(request.getChannel());
+		if (chl == null) {
+			log.error("订阅频道错误, 频道{}不存在", request.getChannel());
+			return subscriber;
+		}
+		subscriber = chl.subscribe(request);
+		return subscriber;
 	}
 	
 	public List<String> getChannelList() {

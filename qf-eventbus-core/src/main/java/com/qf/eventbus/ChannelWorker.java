@@ -1,7 +1,6 @@
 package com.qf.eventbus;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -68,7 +67,26 @@ public class ChannelWorker {
 	}
 	
 	/**
-	 * 获取全部频道
+	 * 根据频道名称获取频道
+	 * 
+	 * @param name
+	 */
+	public Channel getChannel(String name) {
+		return channelMap.get(name);
+	}
+	
+	/**
+	 * 根据频道名称删除频道
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public boolean deleteChannel(String name) {
+		return false;
+	}
+	
+	/**
+	 * 获取全部频道列表
 	 * 
 	 * @return
 	 */

@@ -37,16 +37,17 @@ public interface Channel {
 	/**
 	 * 注册发布者
 	 * 
-	 * @param info
+	 * @param request
 	 * @return
 	 */
-	public ChannelPublisher register(RegistryInfo info);
+	public ChannelPublisher registe(RegisteRequest request);
 	
 	/**
 	 * 订阅频道
 	 * 
+	 * @param request
 	 * @return
 	 */
-	public ChannelSubscriber subscribe();
+	public ChannelSubscriber subscribe(SubscribeRequest request);
 
 }

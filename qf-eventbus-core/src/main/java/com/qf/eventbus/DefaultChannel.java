@@ -1,5 +1,6 @@
 package com.qf.eventbus;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,11 +34,11 @@ public class DefaultChannel extends AbstractChannel {
 	
 	public void setDispatcher(Dispatcher.Type type) {
 		if (status == STATUS_RUNNING) {
-			log.error("运行期不允许设置分发器");
+			log.error("设置分发器失败, 运行期不允许设置分发器");
 			return;
 		}
 		if (dispatcher == null) {
-			log.error("分发器为空, 设置失败");
+			log.error("设置分发器失败, 分发器为空");
 			return;
 		}
 		buildDispatcher(type);
@@ -45,7 +46,7 @@ public class DefaultChannel extends AbstractChannel {
 	
 	public void open() {
 		if (status == STATUS_RUNNING || status == STATUS_CLOSE) {
-			log.error("频道已打开或已关闭");
+			log.error("频道打开失败, 频道已打开或已关闭");
 			return;
 		}
 		if (dispatcher == null) {
@@ -64,8 +65,8 @@ public class DefaultChannel extends AbstractChannel {
 	}
 
 	@Override
-	public boolean checkRegistryInfo(RegistryInfo info) {
-		return true;
+	public <T extends Request> boolean checkRequest(T request) {
+		return request != null && StringUtils.isNotBlank(request.getChannel());
 	}
 
 }

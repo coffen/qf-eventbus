@@ -49,10 +49,10 @@ public class Receiver extends AbstractChannelRegistry implements ChannelSubscrib
 		if (isValid()) {
 			lock.lock();
 			if (isValid()) {
-				boolean result = channel.unRegister(getId());
+				boolean result = channel.unRegiste(getId());
 				if (result) {
 					setValid(false);
-					log.error("取消订阅成功: rid={}", getId());
+					log.info("取消订阅成功: rid={}", getId());
 				}
 			}
 			lock.unlock();

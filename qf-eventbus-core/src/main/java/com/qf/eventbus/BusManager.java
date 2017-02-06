@@ -25,10 +25,10 @@ public interface BusManager {
 	/**
 	 * 创建频道
 	 * 
-	 * @param name
+	 * @param request
 	 * @return
 	 */
-	public <T extends AbstractChannel> ChannelHandler<T> buildChannel(String name);
+	public <T extends AbstractChannel> ChannelHandler<T> buildChannel(CreateRequest request);
 	
 	/**
 	 * 查询全部频道列表

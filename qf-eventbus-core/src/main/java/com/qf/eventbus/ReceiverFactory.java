@@ -41,7 +41,7 @@ public class ReceiverFactory {
 	 */
 	public Receiver buildReceiver(String channel) {
 		if (StringUtils.isBlank(channel)) {
-			log.error("创建Receiver失败, 频道参数为空");
+			log.error("创建订阅者失败, 频道参数为空");
 			return null;
 		}
 		String sid = ID_PREFIX + UUID.randomUUID().toString().replace("-", "");
@@ -56,7 +56,7 @@ public class ReceiverFactory {
 	 */
 	public ChannelSubscriber buildReceiverProxy(final Receiver Receiver) {
 		if (Receiver == null) {
-			log.error("创建Receiver代理失败, 代理对象为空");
+			log.error("创建订阅者代理失败, 代理对象为空");
 			return null;
 		}
 		Object proxy = Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[] { ChannelSubscriber.class }, new InvocationHandler() {

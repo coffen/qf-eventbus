@@ -41,7 +41,7 @@ public class SenderFactory {
 	 */
 	public Sender buildSender(String channel) {
 		if (StringUtils.isBlank(channel)) {
-			log.error("创建Sender失败, 频道参数为空");
+			log.error("创建发布者失败, 频道参数为空");
 			return null;
 		}
 		String sid = ID_PREFIX + UUID.randomUUID().toString().replace("-", "");
@@ -56,7 +56,7 @@ public class SenderFactory {
 	 */
 	public ChannelPublisher buildSenderProxy(final Sender sender) {
 		if (sender == null) {
-			log.error("创建Sender代理失败, 代理对象为空");
+			log.error("创建发布者代理失败, 代理对象为空");
 			return null;
 		}
 		Object proxy = Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[] { ChannelPublisher.class }, new InvocationHandler() {
