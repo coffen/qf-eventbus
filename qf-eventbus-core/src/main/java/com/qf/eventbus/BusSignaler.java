@@ -38,6 +38,8 @@ public class BusSignaler {
 	
 	private final String id = ID_PREFIX + UUID.randomUUID().toString().replace("-", "");
 	
+	private final Dispatcher.Type defaultDispatcher = Dispatcher.Type.MUTIL;
+	
 	private final Map<String, ChannelPublisher> publisherMap = new HashMap<String, ChannelPublisher>();
 	private final Map<String, ChannelSubscriber> subscriberMap = new HashMap<String, ChannelSubscriber>();
 	
@@ -56,21 +58,39 @@ public class BusSignaler {
 	}
 	
 	public boolean buildChannel(String channel) {
+		return buildChannel(channel, defaultDispatcher);
+	}
+	
+	public boolean buildChannel(String channel, Dispatcher.Type type) {
 		CreateRequest request = new CreateRequest();
 		request.setSignalerId(id);
 		request.setChannel(channel);
 		ChannelHandler<AbstractChannel> handler = busManager.buildChannel(request);
 		boolean created = (handler != null);
 		if (created) {
+			handler.setDispatcher(type);
 			handlerMapping.put(channel, handler);
 			log.info("创建频道成功: channel={}", channel);
 		}
 		return created;
-	}	
+	}
 	
-	@SuppressWarnings("rawtypes")
-	public ChannelHandler getChannelHandler(String channel) {
-		return handlerMapping.get(channel);
+	public boolean openChannel(String channel) {
+		ChannelHandler<?> handler = handlerMapping.get(channel);
+		if (handler == null) {
+			log.error("打开频道失败, 不是频道的创建者");
+			return false;
+		}
+		return handler.open();
+	}
+	
+	public void closeChannel(String channel) {
+		ChannelHandler<?> handler = handlerMapping.get(channel);
+		if (handler == null) {
+			log.error("关闭频道失败, 不是频道的创建者");
+			return;
+		}
+		handler.close(true);
 	}
 	
 	public boolean register(String channel, Class<? extends Event> eventClass) {
@@ -147,6 +167,22 @@ public class BusSignaler {
 					publisher.send(data);
 				}
 			}
+		}
+	}
+	
+	public <T> void fileEvent(Class<? extends Event> eventClass, String channel, ActionData<T> data) {
+		Set<String> channelSet = channelEventMapping.get(eventClass);
+		if (channelSet != null && channelSet.contains(channel)) {
+			ChannelPublisher publisher = publisherMap.get(channel);
+			if (publisher != null) {
+				publisher.send(data);
+			}
+			else {
+				log.error("Publisher失效: eventClass={}, channel={}", eventClass.getName(), channel);
+			}
+		}
+		else {
+			log.error("事件未注册到频道: eventClass={}, channel={}", eventClass.getName(), channel);
 		}
 	}
 	

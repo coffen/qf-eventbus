@@ -45,16 +45,17 @@ public class DefaultChannel extends AbstractChannel {
 		log.info("频道设置分发器成功: channel={}, dispatcherType={}", getName(), type);
 	}
 	
-	public void open() {
+	public boolean open() {
 		if (status == STATUS_RUNNING || status == STATUS_CLOSE) {
 			log.error("频道打开失败, 频道已打开或已关闭");
-			return;
+			return false;
 		}
 		if (dispatcher == null) {
 			buildDispatcher(null);
 		}
 		status = STATUS_RUNNING;
 		log.info("频道成功打开: channel={}", getName());
+		return true;
 	}
 	
 	public void close(boolean igoreMsg) {
