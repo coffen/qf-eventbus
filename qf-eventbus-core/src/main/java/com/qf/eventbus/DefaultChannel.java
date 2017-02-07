@@ -59,6 +59,8 @@ public class DefaultChannel extends AbstractChannel {
 	
 	public void close(boolean igoreMsg) {
 		status = STATUS_CLOSE;
+		dispatcher.destroy();
+		dispatcher = null;
 		log.info("频道已关闭: channel={}", getName());
 	}
 	

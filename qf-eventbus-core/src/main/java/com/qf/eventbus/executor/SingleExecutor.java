@@ -91,4 +91,9 @@ public class SingleExecutor implements Executor {
 		return threadExecutor.getQueue().size();
 	}
 	
+	@Override
+	public void shutDown() {
+		threadExecutor.shutdown();
+	}
+	
 }

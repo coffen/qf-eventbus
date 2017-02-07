@@ -34,4 +34,9 @@ public interface Executor {
 	 */
 	public int getAvailableTask();
 	
+	/**
+	 * 关闭线程池
+	 */
+	public void shutDown();
+	
 }

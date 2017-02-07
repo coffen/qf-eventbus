@@ -9,21 +9,30 @@ import com.qf.eventbus.Listener;
 public class BusServerTest {
 	
 	public static void main(String[] args) {
-		final BusSignaler s = BusServer.buildSignaler();
+		final BusSignaler s1 = BusServer.buildSignaler();
 		String channel = "test";
-		boolean created = s.buildChannel(channel);
+		boolean created = s1.buildChannel(channel);
+		ChannelHandler<?> handler = null;
 		if (created) {
-			ChannelHandler<?> handler = s.getChannelHandler(channel);
+			handler = s1.getChannelHandler(channel);
 			handler.open();
 		}
-		s.register(channel, TestEvent.class);
-		s.subscribe(channel, new Listener() {			
+		s1.register(channel, TestEvent.class);
+		s1.subscribe(channel, new Listener() {			
 			public <T> void onEvent(ActionData<T> data) {
-				System.out.println(data.getRegisterId() + ":" + data.getData());
+				System.out.println(s1.getSignalerId() + ":" + data.getData());
+			}
+		});
+		final BusSignaler s2 = BusServer.buildSignaler();
+		s2.subscribe(channel, new Listener() {			
+			public <T> void onEvent(ActionData<T> data) {
+				System.out.println(s2.getSignalerId() + ":" + data.getData());
 			}
 		});
 		ActionData<String> testData = new ActionData<String>("Hello, world!");
-		s.fileEvent(TestEvent.class, testData);
+		s1.fileEvent(TestEvent.class, testData);
+		
+		handler.close(true);
 	}
 	
 }

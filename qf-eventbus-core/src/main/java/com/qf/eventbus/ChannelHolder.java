@@ -68,5 +68,10 @@ public class ChannelHolder {
 	public Receiver removeReceiver(String signalerId) {
 		return receiverMap.remove(signalerId);
 	}
+	
+	public void clean() {
+		senderMap.clear();
+		receiverMap.clear();
+	}
 
 }

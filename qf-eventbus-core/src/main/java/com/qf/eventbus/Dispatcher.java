@@ -76,6 +76,16 @@ public abstract class Dispatcher {
 	 */
 	public abstract <T> void dispatch(ActionData<T> data);
 	
+	/**
+	 * 销毁分发器
+	 * 
+	 * @param data
+	 */
+	public void destroy() {
+		holder.clean();
+		executor.shutDown();
+	}
+	
 	// 分发器类型
 	public static enum Type {		
 		MUTIL, ORDERED, RANDOM;
