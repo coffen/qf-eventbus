@@ -1,4 +1,4 @@
-package com.qf.eventbus.event;
+package com.qf.eventbus.test;
 
 import com.qf.eventbus.Event;
 
