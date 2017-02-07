@@ -4,6 +4,11 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.util.concurrent.AbstractIdleService;
+
 /**
  * 
  * <p>
@@ -22,17 +27,27 @@ import java.lang.reflect.Proxy;
  * @version: v1.0
  *
  */
-public class BusServer {
+public class BusServer extends AbstractIdleService {
 	
-	private static BusManager manager = new DefaultBusManager();
+	private final BusManager manager = new DefaultBusManager();
 	
-	public static BusSignaler buildSignaler() {
+	private final Logger log = LoggerFactory.getLogger(this.getClass());
+	
+	protected void startUp() throws Exception {
+		log.error("总线服务开启中...");
+	}
+
+	protected void shutDown() throws Exception {
+		log.error("总线服务已关闭");
+	}
+	
+	public BusSignaler buildSignaler() {
 		BusManager proxy = buildBusManagerProxy();
 		BusSignaler signaler = new BusSignaler(proxy);
 		return signaler;
 	}
 	
-	private static BusManager buildBusManagerProxy() {
+	private BusManager buildBusManagerProxy() {
 		return (BusManager)Proxy.newProxyInstance(BusServer.class.getClassLoader(), new Class<?>[] { BusManager.class }, new InvocationHandler() {
 			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 				return method.invoke(manager, args);
