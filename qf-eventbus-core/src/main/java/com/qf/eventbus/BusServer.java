@@ -29,12 +29,14 @@ import com.google.common.util.concurrent.AbstractIdleService;
  */
 public class BusServer extends AbstractIdleService {
 	
-	private final BusManager manager = new DefaultBusManager();
+	private final static Logger log = LoggerFactory.getLogger(BusServer.class);
 	
-	private final Logger log = LoggerFactory.getLogger(this.getClass());
+	private final BusManager manager = new DefaultBusManager();
 	
 	protected void startUp() throws Exception {
 		log.error("总线服务开启中...");
+		
+		log.error("总线服务已成功开启");
 	}
 
 	protected void shutDown() throws Exception {
@@ -53,6 +55,22 @@ public class BusServer extends AbstractIdleService {
 				return method.invoke(manager, args);
 			}
 		});
+	}
+	
+	public static void main(String[] args) {
+		BusServer server = new BusServer();
+		server.startAsync();
+        try {
+            Object lock = new Object();
+            synchronized(lock) {
+                while (true) {
+                    lock.wait();
+                }
+            }
+        }
+        catch (InterruptedException ex) {
+            log.debug("ignore interruption");
+        }
 	}
 
 }
