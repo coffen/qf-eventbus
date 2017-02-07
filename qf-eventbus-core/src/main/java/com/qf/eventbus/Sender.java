@@ -59,6 +59,8 @@ public class Sender extends AbstractChannelRegistry implements ChannelPublisher 
 			log.error("发送消息失败, 当前频道注册已失效");
 			return;
 		}
+		data.setRegisterId(getSignalerId());
+		data.setChannel(getChannel());
 		channel.send(data);
 	}
 	

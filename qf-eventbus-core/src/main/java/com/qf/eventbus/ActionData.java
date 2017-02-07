@@ -1,5 +1,7 @@
 package com.qf.eventbus;
 
+import java.io.Serializable;
+
 /**
  * 
  * <p>
@@ -18,27 +20,60 @@ package com.qf.eventbus;
  * @version: v1.0
  *
  */
-public interface ActionData<T> {
+public class ActionData<T> implements Serializable {
+
+	private static final long serialVersionUID = -2434769641025313911L;
+	
+	private String registerId;
+	private String channel;
+	
+	private T data;
+	
+	public ActionData(T data) {
+		this.data = data;
+	}
 	
 	/**
-	 * 获取频道
-	 * 
-	 * @return
+	 * 设置发布器Id
 	 */
-	public String getChannel();
+	public void setRegisterId(String registerId) {
+		this.registerId = registerId;
+	}
 	
 	/**
 	 * 获取发送器Id
 	 * 
 	 * @return
 	 */
-	public String getRegisterId();
+	public String getRegisterId() {
+		return registerId;
+	}
+	
+	/**
+	 * 设置频道
+	 * 
+	 * @param channel
+	 */
+	public void setChannel(String channel) {
+		this.channel = channel;
+	}
+	
+	/**
+	 * 获取频道
+	 * 
+	 * @return
+	 */
+	public String getChannel() {
+		return channel;
+	}
 	
 	/**
 	 * 获取数据
 	 * 
 	 * @return
 	 */
-	public T getData();
+	public T getData() {
+		return data;
+	}
 	
 }
