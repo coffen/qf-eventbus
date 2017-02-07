@@ -12,6 +12,8 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.qf.eventbus.exception.SignalerClosedException;
+
 /**
  * 
  * <p>
@@ -30,7 +32,7 @@ import org.slf4j.LoggerFactory;
  * @version: v1.0
  *
  */
-public class BusSignaler {
+public class BusSignaler implements AutoCloseable {
 	
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 	
@@ -49,6 +51,8 @@ public class BusSignaler {
 	
 	private BusManager busManager;
 	
+	private boolean isClose = false;
+	
 	public BusSignaler(BusManager busManager) {
 		this.busManager = busManager;
 	}
@@ -57,11 +61,12 @@ public class BusSignaler {
 		return id;
 	}
 	
-	public boolean buildChannel(String channel) {
+	public boolean buildChannel(String channel) throws SignalerClosedException {
 		return buildChannel(channel, defaultDispatcher);
 	}
 	
-	public boolean buildChannel(String channel, Dispatcher.Type type) {
+	public boolean buildChannel(String channel, Dispatcher.Type type) throws SignalerClosedException {
+		checkStatus();
 		CreateRequest request = new CreateRequest();
 		request.setSignalerId(id);
 		request.setChannel(channel);
@@ -75,7 +80,8 @@ public class BusSignaler {
 		return created;
 	}
 	
-	public boolean openChannel(String channel) {
+	public boolean openChannel(String channel) throws SignalerClosedException {
+		checkStatus();
 		ChannelHandler<?> handler = handlerMapping.get(channel);
 		if (handler == null) {
 			log.error("打开频道失败, 不是频道的创建者");
@@ -84,7 +90,8 @@ public class BusSignaler {
 		return handler.open();
 	}
 	
-	public void closeChannel(String channel) {
+	public void closeChannel(String channel) throws SignalerClosedException {
+		checkStatus();
 		ChannelHandler<?> handler = handlerMapping.get(channel);
 		if (handler == null) {
 			log.error("关闭频道失败, 不是频道的创建者");
@@ -93,7 +100,8 @@ public class BusSignaler {
 		handler.close(true);
 	}
 	
-	public boolean register(String channel, Class<? extends Event> eventClass) {
+	public boolean register(String channel, Class<? extends Event> eventClass) throws SignalerClosedException {
+		checkStatus();
 		boolean binded = false;
 		ChannelPublisher publisher = null;
 		if (!publisherMap.containsKey(channel)) {
@@ -127,7 +135,8 @@ public class BusSignaler {
 		return true;
 	}
 	
-	public boolean subscribe(String channel, Listener listener) {
+	public boolean subscribe(String channel, Listener listener) throws SignalerClosedException {
+		checkStatus();
 		boolean binded = false;
 		ChannelSubscriber subscriber = null;
 		if (!subscriberMap.containsKey(channel)) {
@@ -156,7 +165,8 @@ public class BusSignaler {
 		return true;
 	}
 	
-	public <T> void fileEvent(Class<? extends Event> eventClass, ActionData<T> data) {
+	public <T> void fileEvent(Class<? extends Event> eventClass, ActionData<T> data) throws SignalerClosedException {
+		checkStatus();
 		Set<String> channelSet = channelEventMapping.get(eventClass);
 		if (CollectionUtils.isNotEmpty(channelSet)) {
 			Iterator<String> it = channelSet.iterator();
@@ -170,7 +180,8 @@ public class BusSignaler {
 		}
 	}
 	
-	public <T> void fileEvent(Class<? extends Event> eventClass, String channel, ActionData<T> data) {
+	public <T> void fileEvent(Class<? extends Event> eventClass, String channel, ActionData<T> data) throws SignalerClosedException {
+		checkStatus();
 		Set<String> channelSet = channelEventMapping.get(eventClass);
 		if (channelSet != null && channelSet.contains(channel)) {
 			ChannelPublisher publisher = publisherMap.get(channel);
@@ -184,6 +195,27 @@ public class BusSignaler {
 		else {
 			log.error("事件未注册到频道: eventClass={}, channel={}", eventClass.getName(), channel);
 		}
+	}
+	
+	public void checkStatus() throws SignalerClosedException {
+		if (isClose) {
+			throw new SignalerClosedException();
+		}
+	}
+	
+	public boolean isClose() {
+		return isClose;
+	}
+	
+	public void setClose() {
+		this.isClose = true;
+	}
+	
+	/**
+	 * 需注销所有发布者和订阅者
+	 */
+	public void close() throws Exception {
+		
 	}
 	
 }
