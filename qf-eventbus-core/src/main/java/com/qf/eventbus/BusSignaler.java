@@ -12,8 +12,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.qf.eventbus.exception.SignalerClosedException;
-
 /**
  * 
  * <p>
@@ -36,11 +34,10 @@ public class BusSignaler implements AutoCloseable {
 	
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 	
-	private final static String ID_PREFIX = "Sig-";
-	
+	private final static String ID_PREFIX = "Sig-";	
 	private final String id = ID_PREFIX + UUID.randomUUID().toString().replace("-", "");
 	
-	private final Dispatcher.Type defaultDispatcher = Dispatcher.Type.MUTIL;
+	private final static Dispatcher.Type DEFAULT_DISPATCHER = Dispatcher.Type.MUTIL;
 	
 	private final Map<String, ChannelPublisher> publisherMap = new HashMap<String, ChannelPublisher>();
 	private final Map<String, ChannelSubscriber> subscriberMap = new HashMap<String, ChannelSubscriber>();
@@ -61,17 +58,20 @@ public class BusSignaler implements AutoCloseable {
 		return id;
 	}
 	
-	public boolean buildChannel(String channel) throws SignalerClosedException {
-		return buildChannel(channel, defaultDispatcher);
+	public boolean buildChannel(String channel) {
+		return buildChannel(channel, DEFAULT_DISPATCHER);
 	}
 	
-	public boolean buildChannel(String channel, Dispatcher.Type type) throws SignalerClosedException {
-		checkStatus();
+	public boolean buildChannel(String channel, Dispatcher.Type type) {
+		boolean created = false;
+		if (!checkStatus()) {
+			return created;
+		}
 		CreateRequest request = new CreateRequest();
 		request.setSignalerId(id);
 		request.setChannel(channel);
 		ChannelHandler<AbstractChannel> handler = busManager.buildChannel(request);
-		boolean created = (handler != null);
+		created = (handler != null);
 		if (created) {
 			handler.setDispatcher(type);
 			handlerMapping.put(channel, handler);
@@ -80,8 +80,10 @@ public class BusSignaler implements AutoCloseable {
 		return created;
 	}
 	
-	public boolean openChannel(String channel) throws SignalerClosedException {
-		checkStatus();
+	public boolean openChannel(String channel) {
+		if (!checkStatus()) {
+			return false;
+		}
 		ChannelHandler<?> handler = handlerMapping.get(channel);
 		if (handler == null) {
 			log.error("打开频道失败, 不是频道的创建者");
@@ -90,8 +92,10 @@ public class BusSignaler implements AutoCloseable {
 		return handler.open();
 	}
 	
-	public void closeChannel(String channel) throws SignalerClosedException {
-		checkStatus();
+	public void closeChannel(String channel) {
+		if (!checkStatus()) {
+			return;
+		}
 		ChannelHandler<?> handler = handlerMapping.get(channel);
 		if (handler == null) {
 			log.error("关闭频道失败, 不是频道的创建者");
@@ -100,9 +104,11 @@ public class BusSignaler implements AutoCloseable {
 		handler.close(true);
 	}
 	
-	public boolean register(String channel, Class<? extends Event> eventClass) throws SignalerClosedException {
-		checkStatus();
+	public boolean register(String channel, Class<? extends Event> eventClass) {
 		boolean binded = false;
+		if (!checkStatus()) {
+			return binded;
+		}
 		ChannelPublisher publisher = null;
 		if (!publisherMap.containsKey(channel)) {
 			RegisteRequest request = new RegisteRequest();
@@ -135,9 +141,11 @@ public class BusSignaler implements AutoCloseable {
 		return true;
 	}
 	
-	public boolean subscribe(String channel, Listener listener) throws SignalerClosedException {
-		checkStatus();
+	public boolean subscribe(String channel, Listener listener) {
 		boolean binded = false;
+		if (!checkStatus()) {
+			return binded;
+		}
 		ChannelSubscriber subscriber = null;
 		if (!subscriberMap.containsKey(channel)) {
 			SubscribeRequest request = new SubscribeRequest();
@@ -165,8 +173,10 @@ public class BusSignaler implements AutoCloseable {
 		return true;
 	}
 	
-	public <T> void fileEvent(Class<? extends Event> eventClass, ActionData<T> data) throws SignalerClosedException {
-		checkStatus();
+	public <T> void fileEvent(Class<? extends Event> eventClass, ActionData<T> data) {
+		if (!checkStatus()) {
+			return;
+		}
 		Set<String> channelSet = channelEventMapping.get(eventClass);
 		if (CollectionUtils.isNotEmpty(channelSet)) {
 			Iterator<String> it = channelSet.iterator();
@@ -180,8 +190,10 @@ public class BusSignaler implements AutoCloseable {
 		}
 	}
 	
-	public <T> void fileEvent(Class<? extends Event> eventClass, String channel, ActionData<T> data) throws SignalerClosedException {
-		checkStatus();
+	public <T> void fileEvent(Class<? extends Event> eventClass, String channel, ActionData<T> data) {
+		if (!checkStatus()) {
+			return;
+		}
 		Set<String> channelSet = channelEventMapping.get(eventClass);
 		if (channelSet != null && channelSet.contains(channel)) {
 			ChannelPublisher publisher = publisherMap.get(channel);
@@ -197,10 +209,11 @@ public class BusSignaler implements AutoCloseable {
 		}
 	}
 	
-	public void checkStatus() throws SignalerClosedException {
+	public boolean checkStatus() {
 		if (isClose) {
-			throw new SignalerClosedException();
+			log.error("BusSignaler已经关闭");
 		}
+		return !isClose;
 	}
 	
 	public boolean isClose() {
@@ -211,9 +224,6 @@ public class BusSignaler implements AutoCloseable {
 		this.isClose = true;
 	}
 	
-	/**
-	 * 需注销所有发布者和订阅者
-	 */
 	public void close() throws Exception {
 		
 	}
