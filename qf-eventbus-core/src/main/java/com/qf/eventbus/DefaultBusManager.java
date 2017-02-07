@@ -39,13 +39,20 @@ public class DefaultBusManager extends AbstractBusManager {
 	}
 	
 	private void registerInnerEvent() {
-		mainSignaler.buildChannel(innerChannel);
-		
-		mainSignaler.register(innerChannel, ChannelCreateEvent.class);
-		mainSignaler.register(innerChannel, RegisteEvent.class);
-		mainSignaler.register(innerChannel, UnregisteEvent.class);
-		mainSignaler.register(innerChannel, SubscribeEvent.class);
-		mainSignaler.register(innerChannel, UnsubscribeEvent.class);
+		boolean created = mainSignaler.buildChannel(innerChannel);
+		if (created) {
+			ChannelHandler<?> handler = mainSignaler.getChannelHandler(innerChannel);
+			if (handler != null) {
+				handler.setDispatcher(Dispatcher.Type.MUTIL);
+				handler.open();
+				
+				mainSignaler.register(innerChannel, ChannelCreateEvent.class);
+				mainSignaler.register(innerChannel, RegisteEvent.class);
+				mainSignaler.register(innerChannel, UnregisteEvent.class);
+				mainSignaler.register(innerChannel, SubscribeEvent.class);
+				mainSignaler.register(innerChannel, UnsubscribeEvent.class);
+			}
+		}
 	}
 
 }

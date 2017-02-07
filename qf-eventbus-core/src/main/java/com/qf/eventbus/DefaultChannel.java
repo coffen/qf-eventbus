@@ -37,11 +37,12 @@ public class DefaultChannel extends AbstractChannel {
 			log.error("设置分发器失败, 运行期不允许设置分发器");
 			return;
 		}
-		if (dispatcher == null) {
+		if (type == null) {
 			log.error("设置分发器失败, 分发器为空");
 			return;
 		}
 		buildDispatcher(type);
+		log.info("频道设置分发器成功: channel={}, dispatcherType={}", getName(), type);
 	}
 	
 	public void open() {
@@ -53,10 +54,12 @@ public class DefaultChannel extends AbstractChannel {
 			buildDispatcher(null);
 		}
 		status = STATUS_RUNNING;
+		log.info("频道成功打开: channel={}", getName());
 	}
 	
 	public void close(boolean igoreMsg) {
 		status = STATUS_CLOSE;
+		log.info("频道已关闭: channel={}", getName());
 	}
 	
 	@Override

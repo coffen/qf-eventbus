@@ -8,9 +8,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.CollectionUtils;
 
 /**
  * 
@@ -66,6 +66,11 @@ public class BusSignaler {
 			log.info("创建频道成功: channel={}", channel);
 		}
 		return created;
+	}	
+	
+	@SuppressWarnings("rawtypes")
+	public ChannelHandler getChannelHandler(String channel) {
+		return handlerMapping.get(channel);
 	}
 	
 	public boolean register(String channel, Class<? extends Event> eventClass) {
@@ -133,7 +138,7 @@ public class BusSignaler {
 	
 	public <T> void fileEvent(Class<? extends Event> eventClass, ActionData<T> data) {
 		Set<String> channelSet = channelEventMapping.get(eventClass);
-		if (CollectionUtils.isEmpty(channelSet)) {
+		if (CollectionUtils.isNotEmpty(channelSet)) {
 			Iterator<String> it = channelSet.iterator();
 			while (it.hasNext()) {
 				String channel = it.next();

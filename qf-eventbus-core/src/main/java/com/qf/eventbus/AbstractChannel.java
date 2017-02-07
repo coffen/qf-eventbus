@@ -39,6 +39,10 @@ public abstract class AbstractChannel implements Channel, ChannelHandler<Abstrac
 	
 	public AbstractChannel() {}
 	
+	public void setName(String name) {
+		this.name = name;
+	}
+	
 	public String getName() {
 		return name;
 	}

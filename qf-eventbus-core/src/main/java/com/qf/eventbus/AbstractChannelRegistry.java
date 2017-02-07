@@ -28,6 +28,8 @@ public abstract class AbstractChannelRegistry implements ChannelRegistry {
 	public AbstractChannelRegistry(String signalerId, String channel) {		
 		this.signalerId = signalerId;
 		this.channel = channel;
+		
+		this.valid = true;
 	}
 	
 	public String getSignalerId() {

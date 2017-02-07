@@ -51,7 +51,8 @@ public class ChannelWorker {
 			return channel;
 		}
 		try {
-			Channel created = channelClazz.newInstance();
+			AbstractChannel created = channelClazz.newInstance();
+			created.setName(channelName);
 			Channel chl = channelMap.putIfAbsent(channelName, created);
 			if (chl == null) {
 				channel = (T)channelMap.get(channelName);

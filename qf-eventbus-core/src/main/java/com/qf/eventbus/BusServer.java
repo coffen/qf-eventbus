@@ -33,7 +33,7 @@ public class BusServer {
 	}
 	
 	private static BusManager buildBusManagerProxy() {
-		return (BusManager)Proxy.newProxyInstance(System.class.getClassLoader(), new Class<?>[] { BusManager.class }, new InvocationHandler() {
+		return (BusManager)Proxy.newProxyInstance(BusServer.class.getClassLoader(), new Class<?>[] { BusManager.class }, new InvocationHandler() {
 			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 				return method.invoke(manager, args);
 			}
