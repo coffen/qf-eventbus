@@ -1,6 +1,7 @@
 package com.qf.eventbus;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 /**
  * 
@@ -24,20 +25,35 @@ public class ActionData<T> implements Serializable {
 
 	private static final long serialVersionUID = -2434769641025313911L;
 	
-	private String registerId;
-	private String channel;
+	private final String sequence = UUID.randomUUID().toString().replace("-", "");
 	
-	private T data;
+	private ThreadLocal<String> registerId;
+	private ThreadLocal<String> channel;
 	
-	public ActionData(T data) {
-		this.data = data;
+	private ThreadLocal<T> data;
+	
+	public ActionData(final T data) {
+		this.data = new ThreadLocal<T>() {
+			protected T initialValue() {
+				return data;
+			}
+		};
 	}
 	
 	/**
 	 * 设置发布器Id
 	 */
-	public void setRegisterId(String registerId) {
-		this.registerId = registerId;
+	public void setRegisterId(final String registerId) {
+		if (this.registerId == null) {
+			this.registerId = new ThreadLocal<String>() {
+				protected String initialValue() {
+					return registerId;
+				}
+			};
+		}
+		else {
+			this.registerId.set(registerId);
+		}
 	}
 	
 	/**
@@ -46,7 +62,7 @@ public class ActionData<T> implements Serializable {
 	 * @return
 	 */
 	public String getRegisterId() {
-		return registerId;
+		return this.registerId.get();
 	}
 	
 	/**
@@ -54,8 +70,17 @@ public class ActionData<T> implements Serializable {
 	 * 
 	 * @param channel
 	 */
-	public void setChannel(String channel) {
-		this.channel = channel;
+	public void setChannel(final String channel) {
+		if (this.channel == null) {
+			this.channel = new ThreadLocal<String>() {
+				protected String initialValue() {
+					return channel;
+				}
+			};
+		}
+		else {
+			this.channel.set(channel);
+		}
 	}
 	
 	/**
@@ -64,7 +89,16 @@ public class ActionData<T> implements Serializable {
 	 * @return
 	 */
 	public String getChannel() {
-		return channel;
+		return this.channel.get();
+	}
+	
+	/**
+	 * 获取消息序列号
+	 * 
+	 * @return
+	 */
+	public String getSequence() {
+		return this.sequence;
 	}
 	
 	/**
@@ -73,7 +107,7 @@ public class ActionData<T> implements Serializable {
 	 * @return
 	 */
 	public T getData() {
-		return data;
+		return this.data.get();
 	}
 	
 }

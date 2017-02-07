@@ -21,11 +21,11 @@ package com.qf.eventbus;
 public interface Executor {
 	
 	/**
-	 * 提交待处理消息
+	 * 提交线程
 	 * 
-	 * @param data
+	 * @param runnable
 	 */
-	public <T> void submit(ActionData<T> data);
+	public <T> void submit(Runnable runnable);
 	
 	/**
 	 * 获取剩余的任务

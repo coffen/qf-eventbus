@@ -15,22 +15,24 @@ public class BusServerTest {
 			s1.register(channel, TestEvent.class);
 			s1.subscribe(channel, new Listener() {			
 				public <T> void onEvent(ActionData<T> data) {
-					System.out.println(s1.getSignalerId() + ":" + data.getData());
+					System.out.println(data.getRegisterId() + ":" + data.getData());
+					data.setRegisterId(null);
 				}
 			});
 			final BusSignaler s2 = BusServer.buildSignaler();
 			s2.subscribe(channel, new Listener() {			
 				public <T> void onEvent(ActionData<T> data) {
-					System.out.println(s2.getSignalerId() + ":" + data.getData());
+					System.out.println(data.getRegisterId() + ":" + data.getData());
 				}
 			});
-			s1.fileEvent(TestEvent.class, new ActionData<String>("Hello, world!"));
-			s1.fileEvent(TestEvent.class, new ActionData<String>("Well done!"));
+			ActionData<String> data = new ActionData<String>("Hello, world!");
+			s1.fileEvent(TestEvent.class, data);
+			s1.fileEvent(TestEvent.class, data);
 			
 			s2.fileEvent(TestEvent.class, "test", new ActionData<String>("Another question!"));
 			
-			s2.closeChannel(channel);
-			s1.closeChannel(channel);			
+			//s2.closeChannel(channel);
+			//s1.closeChannel(channel);			
 		}
 	}
 	
