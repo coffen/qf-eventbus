@@ -5,9 +5,7 @@ import java.util.Collection;
 import com.qf.eventbus.AbstractChannel;
 import com.qf.eventbus.ActionData;
 import com.qf.eventbus.Dispatcher;
-import com.qf.eventbus.Executor;
 import com.qf.eventbus.Receiver;
-import com.qf.eventbus.executor.SingleExecutor;
 import com.qf.eventbus.thread.ReceiveRunnable;
 
 /**
@@ -30,12 +28,8 @@ import com.qf.eventbus.thread.ReceiveRunnable;
  */
 public class MutilDispatcher extends Dispatcher {
 	
-	private Executor receiveExecutor;
-	
 	public MutilDispatcher(AbstractChannel channel) {
 		super(channel);
-		
-		this.receiveExecutor = new SingleExecutor();
 	}
 
 	public <T> void dispatch(ActionData<T> data) {
@@ -43,7 +37,7 @@ public class MutilDispatcher extends Dispatcher {
 		if (col.size() > 0) {
 			for (Receiver r : col) {
 				if (r.isValid()) {
-					receiveExecutor.submit(new ReceiveRunnable<>(r, data));
+					receiveExecutor.submit(new ReceiveRunnable<T>(r, data));
 				}
 			}
 		}

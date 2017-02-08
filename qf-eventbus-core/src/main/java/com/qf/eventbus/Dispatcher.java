@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.qf.eventbus.executor.SingleExecutor;
-import com.qf.eventbus.thread.DispatchRunnable;
 
 /**
  * 
@@ -29,16 +28,16 @@ public abstract class Dispatcher {
 	
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 	
-	private AbstractChannel channel;
-	private Executor dispatchExecutor;
+	protected Executor receiveExecutor;
 	
+	private AbstractChannel channel;
 	private ChannelHolder holder;
 	
 	public Dispatcher(AbstractChannel channel) {
 		this.channel = channel;
 		this.holder = channel.getHolder();
 		
-		this.dispatchExecutor = new SingleExecutor();
+		this.receiveExecutor = new SingleExecutor();
 	}
 	
 	public ChannelHolder getHolder() {
@@ -55,7 +54,7 @@ public abstract class Dispatcher {
 			log.error("消息验证失败, data={}", data);
 			return;
 		}
-		dispatchExecutor.submit(new DispatchRunnable<T>(this, data));
+		dispatch(data);
 	}
 	
 	// 验证消息
@@ -84,7 +83,7 @@ public abstract class Dispatcher {
 	 */
 	public void destroy() {
 		holder.clean();
-		dispatchExecutor.shutDown();
+		receiveExecutor.shutDown();
 	}
 	
 	// 分发器类型
