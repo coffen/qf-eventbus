@@ -37,11 +37,12 @@ public @interface Interceptor {
 	String[] event() default "";
 	
 	/**
-	 * 拦截类型
+	 * 拦截类型（即拦截的Pointcut）
 	 * 
-	 * <p>type=InterceptType.PARAMETER_BEFORE,InterceptType.PARAMETER_AFTER, 则拦截方法至少有一个参数
-	 * <p>type=InterceptType.RETURNING, 则拦截方法必须有返回类型
-	 * <p>表达式验证
+	 * <p>type=InterceptType.PARAMETER_BEFORE, 在方法执行前异步执行, 拦截方法至少有一个参数
+	 * <p>type=InterceptType.PARAMETER_AFTER,  在方法执行后异步执行, 拦截方法至少有一个参数
+	 * <p>type=InterceptType.RETURNING, 在方法执行后异步执行, 拦截方法必须有返回类型
+	 * <p>type=InterceptType.ON_EXCEPTION, 在方法抛出异常时异步执行, 拦截方法必须声明抛出异常
 	 * 
 	 * @return
 	 */
@@ -51,8 +52,8 @@ public @interface Interceptor {
 	 * 拦截Spel表达式, 表达式解析结果作为ActionData发布
 	 * 
 	 * <p>type=InterceptType.PARAMETER_BEFORE,InterceptType.PARAMETER_AFTER, 如未指定表达式, 参数数组即发布数据
-	 * <p>type=InterceptType.RETURNING, 如未指定表达式, 返回对象即发布数据（返回对象为空不处理）
-	 * <p>type=InterceptType.ON_EXCEPTION, 表达式无效, 异常对象即发布数据
+	 * <p>type=InterceptType.RETURNING,    如未指定表达式, 返回对象即发布数据（返回对象为空不处理）
+	 * <p>type=InterceptType.ON_EXCEPTION, 表达式无效, 抛出异常即发布数据
 	 * 
 	 * @return
 	 */
