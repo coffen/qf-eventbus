@@ -35,6 +35,13 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 	private ChannelWorker worker = new ChannelWorker();
 	private Class<? extends AbstractChannel> channelClass = DefaultChannel.class;
 	
+	@Override
+	public BusSignaler buildSignaler() {
+		BusManager proxy = buildBusManagerProxy();
+		BusSignaler signaler = new BusSignaler(proxy);
+		return signaler;
+	}
+	
 	@SuppressWarnings("unchecked")
 	public <T extends AbstractChannel> ChannelHandler<T> buildChannel(CreateRequest request) {
 		ChannelHandler<T> handler = null;
@@ -86,6 +93,20 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 	
 	public List<String> getChannelList() {
 		return Collections.unmodifiableList(worker.getChannelList());
+	}
+	
+	/**
+	 * 创建BusSignaler代理
+	 * 
+	 * @return
+	 */
+	private BusManager buildBusManagerProxy() {
+		final BusManager manager = this;
+		return (BusManager)Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[] { BusManager.class }, new InvocationHandler() {
+			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+				return method.invoke(manager, args);
+			}
+		});
 	}
 	
 	/**

@@ -23,6 +23,13 @@ import java.util.List;
 public interface BusManager {
 	
 	/**
+	 * 创建BusSignaler
+	 * 
+	 * @return
+	 */
+	public BusSignaler buildSignaler();
+	
+	/**
 	 * 创建频道
 	 * 
 	 * @param request
