@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
  * <br>
  * Description: 事件Anno
  * <br>
- * File Name: Event.java
+ * File Name: EventBinding.java
  * <br>
  * Copyright: Copyright (C) 2015 All Rights Reserved.
  * <br>
@@ -27,7 +27,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface Event {
+public @interface EventBinding {
 	
 	/**
 	 * 事件名称, 若未设置则以当前类名作为事件名称, 有重复事件名Spring解析报错

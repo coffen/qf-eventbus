@@ -7,7 +7,7 @@
        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd
 		    http://www.eventbus.com/eventbus http://www.eventbus.com/eventbus.xsd">
 
-	<eventbus:annotation package="com.qf"/>
+	<eventbus:annotation package="com.qf.eventbus.test"/>
 
 
 </beans>

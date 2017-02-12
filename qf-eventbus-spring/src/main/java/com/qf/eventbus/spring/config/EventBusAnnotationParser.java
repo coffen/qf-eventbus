@@ -35,11 +35,11 @@ public class EventBusAnnotationParser implements BeanDefinitionParser {
 		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(EventbusAnnotationBeanPostProcessor.class);
 		builder.addPropertyValue("annoPackage", pkg);
 		
-        registerPostProcessor(parserContext, builder, "eventBusBean");
+        registerPostProcessor(parserContext, builder, EventbusAnnotationBeanPostProcessor.class.getSimpleName());
         return builder.getBeanDefinition();
 	}
 	
-	private static void registerPostProcessor(ParserContext parserContext, BeanDefinitionBuilder builder, String beanName) {
+	private void registerPostProcessor(ParserContext parserContext, BeanDefinitionBuilder builder, String beanName) {
 		builder.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
 		parserContext.getRegistry().registerBeanDefinition(beanName, builder.getBeanDefinition());
         BeanDefinitionHolder holder = new BeanDefinitionHolder(builder.getBeanDefinition(), beanName);
