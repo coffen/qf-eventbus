@@ -1,1 +1,1 @@
-http/://www.qf.com/eventbus=com.qf.eventbus.spring.config.EventBusNamespaceHandler
+http\://www.eventbus.com/eventbus=com.qf.eventbus.spring.config.EventBusNamespaceHandler

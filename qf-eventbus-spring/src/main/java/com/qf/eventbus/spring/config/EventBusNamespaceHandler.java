@@ -7,7 +7,7 @@ import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
  * <p>
  * Project Name: C2C商城
  * <br>
- * Description: 总线管理名称空间处理器
+ * Description: 事件总线名称空间处理器
  * <br>
  * File Name: EventBusNamespaceHandler.java
  * <br>

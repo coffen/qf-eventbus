@@ -15,7 +15,7 @@ import com.qf.eventbus.spring.bean.EventbusAnnotationBeanPostProcessor;
  * <p>
  * Project Name: C2C商城
  * <br>
- * Description: 总线管理Annotation元素解析器
+ * Description: 事件总线Annotation元素解析器
  * <br>
  * File Name: EventBusAnnotationParser.java
  * <br>
@@ -33,7 +33,7 @@ public class EventBusAnnotationParser implements BeanDefinitionParser {
 	public BeanDefinition parse(Element element, ParserContext parserContext) {
 		String pkg = element.getAttribute("package");
 		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(EventbusAnnotationBeanPostProcessor.class);
-		builder.addPropertyValue("scanPackage", pkg);
+		builder.addPropertyValue("annoPackage", pkg);
 		
         registerPostProcessor(parserContext, builder, "eventBusBean");
         return builder.getBeanDefinition();
