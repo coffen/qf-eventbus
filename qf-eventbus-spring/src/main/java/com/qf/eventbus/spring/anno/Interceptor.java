@@ -39,10 +39,10 @@ public @interface Interceptor {
 	/**
 	 * 拦截类型（即拦截的Pointcut）
 	 * 
-	 * <p>type=InterceptType.PARAMETER_BEFORE, 在方法执行前异步执行, 拦截方法至少有一个参数
-	 * <p>type=InterceptType.PARAMETER_AFTER,  在方法执行后异步执行, 拦截方法至少有一个参数
-	 * <p>type=InterceptType.RETURNING, 在方法执行后异步执行, 拦截方法必须有返回类型
-	 * <p>type=InterceptType.ON_EXCEPTION, 在方法抛出异常时异步执行, 拦截方法必须声明抛出异常
+	 * <p>type=InterceptType.PARAMETER_BEFORE, 在方法执行前异步执行
+	 * <p>type=InterceptType.PARAMETER_AFTER,  在方法执行后异步执行
+	 * <p>type=InterceptType.RETURNING, 在方法执行后异步执行
+	 * <p>type=InterceptType.ON_EXCEPTION, 在方法抛出异常时异步执行
 	 * 
 	 * @return
 	 */

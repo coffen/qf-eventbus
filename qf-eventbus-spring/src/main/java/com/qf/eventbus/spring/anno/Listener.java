@@ -32,8 +32,6 @@ public @interface Listener {
 	/**
 	 * 订阅频道, 未设置时如果Subscriber也未设置默认事件, 则该拦截器无效
 	 * 
-	 * <p>方法参数只有一个且类型必须为ActionData
-	 * 
 	 * @return
 	 */
     String[] channel() default "";

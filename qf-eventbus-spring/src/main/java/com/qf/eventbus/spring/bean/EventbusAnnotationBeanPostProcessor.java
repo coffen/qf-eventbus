@@ -26,10 +26,10 @@ import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
 import org.springframework.util.StringUtils;
 
 import com.qf.eventbus.BusManager;
-import com.qf.eventbus.BusServer;
 import com.qf.eventbus.DefaultBusManager;
 import com.qf.eventbus.Event;
 import com.qf.eventbus.spring.anno.EventBinding;
+import com.qf.eventbus.spring.anno.InterceptType;
 import com.qf.eventbus.spring.anno.Interceptor;
 import com.qf.eventbus.spring.anno.Listener;
 import com.qf.eventbus.spring.anno.Publisher;
@@ -61,8 +61,8 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 	private String annoPackage;	// 扫描事件、发布者、订阅者的类包, 多个包名用","隔开
 	
 	private final Map<Class<? extends Event>, List<String>> eventBindingMap = new HashMap<Class<? extends Event>, List<String>>();
-	private final Map<Method, List<String>> inteceptorMap = new HashMap<Method, List<String>>();
-	private final Map<Method, List<String>> listenerMap = new HashMap<Method, List<String>>();
+//	private final Map<Method, List<String>> inteceptorMap = new HashMap<Method, List<String>>();
+//	private final Map<Method, List<String>> listenerMap = new HashMap<Method, List<String>>();
 	
 	public EventbusAnnotationBeanPostProcessor() {}
 	
@@ -90,13 +90,13 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
         	try {
         		Class<?> clazz = classLoader.loadClass(bd.getBeanClassName());
         		if (clazz.isAnnotationPresent(EventBinding.class)) {
-        			collectEventBinding(clazz);
+        			buildEventBinding(clazz);
         		}
         		if (clazz.isAnnotationPresent(Publisher.class)) {
-        			collectInteceptors(clazz);
+        			buildPublisherAdvisor(clazz);
         		}
         		if (clazz.isAnnotationPresent(Subscriber.class)) {
-        			collectListeners(clazz);
+        			buildSubscribeAdvisor(clazz);
         		}
         	}
         	catch (ClassNotFoundException e) {
@@ -122,7 +122,7 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
     }
     
 	@SuppressWarnings("unchecked")
-	private void collectEventBinding(Class<?> clazz) throws BeansException {
+	private void buildEventBinding(Class<?> clazz) throws BeansException {
     	if (clazz != null && clazz.isAnnotationPresent(EventBinding.class)) {
     		EventBinding binding = clazz.getAnnotation(EventBinding.class);
     		// 验证注释的正确性
@@ -166,7 +166,7 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
     	}
     }
 	
-	private void collectInteceptors(Class<?> clazz) throws BeansException {
+	private void buildPublisherAdvisor(Class<?> clazz) throws BeansException {
     	if (clazz != null && clazz.isAnnotationPresent(Publisher.class)) {
     		Publisher publisher = clazz.getAnnotation(Publisher.class);
     		List<String> defaultEvents = new ArrayList<String>(Arrays.asList(publisher.event()));
@@ -178,6 +178,7 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
     			}
     		}
     		boolean hasDefaultEvent = defaultEvents.size() > 0;
+    		// 检验每一个注释的合法性
             Method[] methods = clazz.getDeclaredMethods();
             for (Method method : methods){
             	if (method.isAnnotationPresent(Interceptor.class)) {
@@ -195,15 +196,26 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
         				log.error("拦截器至少绑定一个事件");
         				throw new FatalBeanException("拦截器注册失败: 绑定事件为空");
             		}
-            		List<String> events = new ArrayList<String>(defaultEvents);
-            		events.addAll(methodEvents);
-            		inteceptorMap.put(method, events);
+            		InterceptType type = interceptor.type();
+            		if (type == InterceptType.PARAMETER_BEFORE || type == InterceptType.PARAMETER_AFTER) {
+            			if (method.getParameterTypes() == null || method.getParameterTypes().length == 0) {
+            				log.info("指定方法参数作为事件消息主体时, 应至少设置一个参数");
+            			}
+            		}
+            		else if (type == InterceptType.RETURNING && method.getReturnType() == null) {
+            			log.info("指定返回值作为事件消息主体时, 应设置返回类型");
+            		}
+            		else if (type == InterceptType.ON_EXCEPTION && (method.getExceptionTypes() == null || method.getExceptionTypes().length == 0)) {
+            			log.info("指定异常作为事件消息主体时, 应显式设置抛出异常");
+            		}
             	}
             }
+        	// 创建Advisor的BeanDifinition
+            
     	}
 	}
 	
-	private void collectListeners(Class<?> clazz) throws BeansException {
+	private void buildSubscribeAdvisor(Class<?> clazz) throws BeansException {
     	if (clazz != null && clazz.isAnnotationPresent(Subscriber.class)) {
     		Subscriber subscriber = clazz.getAnnotation(Subscriber.class);
     		List<String> defaultChannels = new ArrayList<String>(Arrays.asList(subscriber.channel()));
@@ -215,6 +227,7 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
     			}
     		}
     		boolean hasDefaultChannel = defaultChannels.size() > 0;
+    		// 检验每一个注释的合法性
             Method[] methods = clazz.getDeclaredMethods();
             for (Method method : methods){
             	if (method.isAnnotationPresent(Listener.class)) {
@@ -232,11 +245,10 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
         				log.error("监听器至少订阅一个频道");
         				throw new FatalBeanException("监听器注册失败: 订阅频道为空");
             		}
-            		List<String> channels = new ArrayList<String>(defaultChannels);
-            		channels.addAll(methodChannels);
-            		listenerMap.put(method, channels);
             	}
             }
+            // 创建Advisor的BeanDifinition
+            
     	}
 	}
 	
