@@ -15,6 +15,7 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.aop.config.AopConfigUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.FatalBeanException;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -87,6 +88,8 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 	}
 
 	public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
+		AopConfigUtils.registerAutoProxyCreatorIfNecessary(registry);
+		
 		// 注册BusServerl类型Bean
 		registerEventBus(registry);
 		
@@ -130,7 +133,6 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
         }
     	// 创建PublisherAdvisor的BeanDifinition
 		BeanDefinitionBuilder pubBuilder = BeanDefinitionBuilder.genericBeanDefinition(PublisherAdvisor.class);
-		pubBuilder.getBeanDefinition().setAttribute("eventMapping", eventClazzMapping);
 		registerBeanDifinition(registry, pubBuilder, pubAdvisorBeanName);
 	}
 	
@@ -347,8 +349,9 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 			}
 		}
 		
-		BeanDefinition publisherAdvisor = beanFactory.getBeanDefinition(pubAdvisorBeanName);
-		publisherAdvisor.setAttribute("signaler", signaler);
+		PublisherAdvisor advisor = (PublisherAdvisor)beanFactory.getBean(pubAdvisorBeanName);
+		advisor.setSignaler(signaler);
+		advisor.setEventMapping(eventClazzMapping);
 	}
 
 }

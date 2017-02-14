@@ -12,8 +12,6 @@ import org.springframework.aop.Pointcut;
 import org.springframework.aop.support.AbstractPointcutAdvisor;
 import org.springframework.aop.support.ComposablePointcut;
 import org.springframework.aop.support.annotation.AnnotationMatchingPointcut;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 
 import com.qf.eventbus.ActionData;
@@ -42,7 +40,7 @@ import com.qf.eventbus.spring.util.SpelExpressionUtil;
  * @version: v1.0
  *
  */
-public class PublisherAdvisor extends AbstractPointcutAdvisor implements BeanPostProcessor {
+public class PublisherAdvisor extends AbstractPointcutAdvisor {
 	
 	private static final long serialVersionUID = 7098195944662142447L;
 	
@@ -53,7 +51,10 @@ public class PublisherAdvisor extends AbstractPointcutAdvisor implements BeanPos
 	private Advice advice;
 	private Pointcut pointCut;
 	
-	public PublisherAdvisor() {}
+	public PublisherAdvisor() {
+		buildAdvice();
+		buildPointcut();
+	}
 	
 	public void setSignaler(BusSignaler signaler) {
 		this.signaler = signaler;
@@ -148,17 +149,6 @@ public class PublisherAdvisor extends AbstractPointcutAdvisor implements BeanPos
 		AnnotationMatchingPointcut clazzPointcut = AnnotationMatchingPointcut.forClassAnnotation(Publisher.class);
 		AnnotationMatchingPointcut methodPointcut = AnnotationMatchingPointcut.forMethodAnnotation(Interceptor.class);
 		this.pointCut = new ComposablePointcut(clazzPointcut).union(methodPointcut);
-	}
-
-	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-		return bean;
-	}
-
-	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-		buildAdvice();
-		buildPointcut();
-		
-		return bean;
 	}
 
 }
