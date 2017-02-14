@@ -1,7 +1,5 @@
 package com.qf.eventbus.spring.bean;
 
-import java.util.Map;
-
 import org.aopalliance.aop.Advice;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -13,40 +11,37 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 
 import com.qf.eventbus.BusSignaler;
-import com.qf.eventbus.Event;
-import com.qf.eventbus.spring.anno.Interceptor;
-import com.qf.eventbus.spring.anno.Publisher;
+import com.qf.eventbus.spring.anno.Listener;
+import com.qf.eventbus.spring.anno.Subscriber;
 
 /**
  * 
  * <p>
- * Project Name: 买到手抽筋
+ * Project Name: C2C商城
  * <br>
- * Description: 发布者Advisor
+ * Description: 订阅者Advisor
  * <br>
- * File Name: PublisherAdvisor.java
+ * File Name: SubscriberAdvisor.java
  * <br>
  * Copyright: Copyright (C) 2015 All Rights Reserved.
  * <br>
  * Company: 杭州偶尔科技有限公司
  * <br>
  * @author 穷奇
- * @create time：2017-02-13 23:01:42 
+ * @create time：2017年2月14日 上午9:43:24 
  * @version: v1.0
  *
  */
-public class PublisherAdvisor extends AbstractPointcutAdvisor implements BeanPostProcessor {
+public class SubscriberAdvisor extends AbstractPointcutAdvisor implements BeanPostProcessor {
 	
-	private static final long serialVersionUID = 7098195944662142447L;
-	
+	private static final long serialVersionUID = -646761070317608113L;
+
 	private BusSignaler signaler;
-	
-	private Map<String, Class<? extends Event>> eventMapping;
 	
 	private Advice advice;
 	private Pointcut pointCut;
 	
-	public PublisherAdvisor() {}
+	public SubscriberAdvisor() {}
 	
 	public void setSignaler(BusSignaler signaler) {
 		this.signaler = signaler;
@@ -54,14 +49,6 @@ public class PublisherAdvisor extends AbstractPointcutAdvisor implements BeanPos
 	
 	public BusSignaler getSignaler() {
 		return signaler;
-	}
-	
-	public void setEventMapping(Map<String, Class<? extends Event>> eventMapping) {
-		this.eventMapping = eventMapping;
-	}
-	
-	public Map<String, Class<? extends Event>> getEventMapping() {
-		return eventMapping;
 	}
 
 	public Pointcut getPointcut() {
@@ -81,8 +68,8 @@ public class PublisherAdvisor extends AbstractPointcutAdvisor implements BeanPos
 	}
 	
 	private void buildPointcut() {
-		AnnotationMatchingPointcut clazzPointcut = AnnotationMatchingPointcut.forClassAnnotation(Publisher.class);
-		AnnotationMatchingPointcut methodPointcut = AnnotationMatchingPointcut.forMethodAnnotation(Interceptor.class);
+		AnnotationMatchingPointcut clazzPointcut = AnnotationMatchingPointcut.forClassAnnotation(Subscriber.class);
+		AnnotationMatchingPointcut methodPointcut = AnnotationMatchingPointcut.forMethodAnnotation(Listener.class);
 		this.pointCut = new ComposablePointcut(clazzPointcut).union(methodPointcut);
 	}
 

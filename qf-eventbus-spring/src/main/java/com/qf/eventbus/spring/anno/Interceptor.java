@@ -30,7 +30,7 @@ import java.lang.annotation.Target;
 public @interface Interceptor {
 	
 	/**
-	 * 发起事件列表, 未设置时如果Publisher也未设置默认事件, 则该拦截器无效
+	 * 发起事件列表
 	 * 
 	 * @return
 	 */

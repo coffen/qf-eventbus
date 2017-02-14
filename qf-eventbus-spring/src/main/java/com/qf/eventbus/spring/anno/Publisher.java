@@ -28,12 +28,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface Publisher {
-	
-	/**
-	 * 默认发起事件列表, 如设置了事件则下属的所有Interceptor均注册该事件列表
-	 * 
-	 * @return
-	 */
-	String[] event() default "";
 
 }

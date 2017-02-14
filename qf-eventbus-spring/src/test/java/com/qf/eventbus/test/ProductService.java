@@ -20,7 +20,7 @@ public class ProductService {
 		
 	}
 	
-	@Listener(channel="esEvent")
+	@Listener(channel="es")
 	public void updateAmountAndSales() {
 		
 	}

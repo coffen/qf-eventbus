@@ -29,11 +29,4 @@ import java.lang.annotation.Target;
 @Documented
 public @interface Subscriber {
 	
-	/**
-	 * 默认订阅频道列表, 如设置了默认订阅频道则下属的所有Listener均监听该频道
-	 * 
-	 * @return
-	 */
-    String[] channel() default "";
-	
 }

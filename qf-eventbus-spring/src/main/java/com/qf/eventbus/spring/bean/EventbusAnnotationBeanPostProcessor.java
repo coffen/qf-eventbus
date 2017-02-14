@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -23,13 +24,14 @@ import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.NoOp;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import com.qf.eventbus.BusManager;
+import com.qf.eventbus.BusSignaler;
 import com.qf.eventbus.DefaultBusManager;
 import com.qf.eventbus.Event;
 import com.qf.eventbus.spring.anno.EventBinding;
-import com.qf.eventbus.spring.anno.InterceptType;
 import com.qf.eventbus.spring.anno.Interceptor;
 import com.qf.eventbus.spring.anno.Listener;
 import com.qf.eventbus.spring.anno.Publisher;
@@ -60,9 +62,14 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 	
 	private String annoPackage;	// 扫描事件、发布者、订阅者的类包, 多个包名用","隔开
 	
-	private final Map<Class<? extends Event>, List<String>> eventBindingMap = new HashMap<Class<? extends Event>, List<String>>();
-//	private final Map<Method, List<String>> inteceptorMap = new HashMap<Method, List<String>>();
-//	private final Map<Method, List<String>> listenerMap = new HashMap<Method, List<String>>();
+	private final Map<String, Class<? extends Event>> eventClazzMapping = new HashMap<String, Class<? extends Event>>();
+	private final Set<String> channelSet = new HashSet<String>();
+	
+	private final String pubAdvisorBeanName = "publisherAdvisor";
+	private final String subAdvisorBeanName = "subscriberAdvisor";
+	private final String busBeanName = "busManager";
+	
+	private final Class<? extends BusManager> busManagerClazz = DefaultBusManager.class;
 	
 	public EventbusAnnotationBeanPostProcessor() {}
 	
@@ -76,7 +83,7 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 
 	public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
 		// 注册BusServerl类型Bean
-		registerEventBusServer(registry);
+		registerEventBus(registry);
 		
         String[] scanPackages = StringUtils.tokenizeToStringArray(annoPackage, ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS);
         if (scanPackages == null || scanPackages.length < 1) {
@@ -86,30 +93,49 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
         ClassPathEventBusBeanDefinitionScanner scanner = new ClassPathEventBusBeanDefinitionScanner(registry);
         ClassLoader classLoader = scanner.getResourceLoader().getClassLoader();
         Set<BeanDefinition> beanDefinitions = findCandidateComponents(scanner, scanPackages);
+        
+        // 收集事件类型和绑定的频道
         for(BeanDefinition bd : beanDefinitions) {
         	try {
         		Class<?> clazz = classLoader.loadClass(bd.getBeanClassName());
         		if (clazz.isAnnotationPresent(EventBinding.class)) {
         			buildEventBinding(clazz);
         		}
+        	}
+        	catch (ClassNotFoundException e) {
+        		log.error("未找到指定类", e);
+        	}
+        }
+        // 检查发布者和订阅者的注释
+        for(BeanDefinition bd : beanDefinitions) {
+        	try {
+        		Class<?> clazz = classLoader.loadClass(bd.getBeanClassName());
         		if (clazz.isAnnotationPresent(Publisher.class)) {
-        			buildPublisherAdvisor(clazz);
+        			checkPublisherClazz(clazz);
         		}
         		if (clazz.isAnnotationPresent(Subscriber.class)) {
-        			buildSubscribeAdvisor(clazz);
+        			checkSubscribeClazz(clazz);
         		}
         	}
         	catch (ClassNotFoundException e) {
         		log.error("未找到指定类", e);
         	}
         }
+    	// 创建PublisherAdvisor的BeanDifinition
+		BeanDefinitionBuilder pubBuilder = BeanDefinitionBuilder.genericBeanDefinition(PublisherAdvisor.class);
+		pubBuilder.getBeanDefinition().setAttribute("eventMapping", eventClazzMapping);
+		registerAdvisor(registry, pubBuilder, pubAdvisorBeanName);
+		
+    	// 创建SubscriberAdvisor的BeanDifinition
+		BeanDefinitionBuilder subBuilder = BeanDefinitionBuilder.genericBeanDefinition(SubscriberAdvisor.class);
+		registerAdvisor(registry, subBuilder, subAdvisorBeanName);
 	}
 	
-	private void registerEventBusServer(BeanDefinitionRegistry registry) {
-		BeanDefinitionBuilder eventBusServerBuilder = BeanDefinitionBuilder.genericBeanDefinition(DefaultBusManager.class);
-		eventBusServerBuilder.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
-		eventBusServerBuilder.setScope(BeanDefinition.SCOPE_SINGLETON);
-		registry.registerBeanDefinition("busManager", eventBusServerBuilder.getBeanDefinition());
+	private void registerEventBus(BeanDefinitionRegistry registry) {
+		BeanDefinitionBuilder eventBusBuilder = BeanDefinitionBuilder.genericBeanDefinition(busManagerClazz);
+		eventBusBuilder.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
+		eventBusBuilder.setScope(BeanDefinition.SCOPE_SINGLETON);
+		registry.registerBeanDefinition(busBeanName, eventBusBuilder.getBeanDefinition());
 	}
 	
     private Set<BeanDefinition> findCandidateComponents(ClassPathBeanDefinitionScanner scanner, String... scanPackages){
@@ -126,138 +152,126 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
     	if (clazz != null && clazz.isAnnotationPresent(EventBinding.class)) {
     		EventBinding binding = clazz.getAnnotation(EventBinding.class);
     		// 验证注释的正确性
-    		String name = binding.name();
-    		if (StringUtils.isEmpty(name) || eventBindingMap.containsKey(name)) {
-				log.error("事件名称不能为空");
-				throw new FatalBeanException("事件代理类生成错误, 名称为空");
+    		String eventName = binding.name();
+    		if (StringUtils.isEmpty(eventName)) {
+				log.error("事件检查错误, 事件名称为空: class={}", clazz);
+				throw new FatalBeanException("事件检查错误错误, 事件名称为空: " + clazz.getName());
     		}
-    		if (eventBindingMap.containsKey(name)) {
-				log.error("同名事件已经存在");
-				throw new FatalBeanException("事件代理类生成错误, 同名事件已经存在");
+    		if (eventClazzMapping.containsKey(eventName)) {
+				log.error("事件检查错误, 事件名称为空: class={}, name={}", clazz.getName(), eventName);
+				throw new FatalBeanException("事件检查错误错误, 同名事件已经存在: " + eventName);
     		}
-    		List<String> channels = new ArrayList<String>(Arrays.asList(binding.channel()));
-    		Iterator<String> it = channels.iterator();
-    		while(it.hasNext()) {
-    			String channel = it.next();
-    			if (StringUtils.isEmpty(channel)) {
-    				it.remove();
-    			}
-    		}
-    		if (channels.size() == 0) {
-				log.error("事件绑定渠道为空");
-				throw new FatalBeanException("事件代理类生成错误, 绑定渠道为空");
-    		}
+    		List<String> channelList = checkChannel(clazz, binding.channel(), false);
+
+    		Class<? extends Event> eventProxyClazz = null;
     		if (Event.class.isAssignableFrom(clazz)) {
-    			eventBindingMap.put((Class<? extends Event>)clazz, channels);
+    			eventProxyClazz = (Class<? extends Event>)clazz;
     		}
     		else {
     			try {
 	    			Enhancer enhancer = new Enhancer();
 	    			enhancer.setInterfaces(new Class[] { Event.class });
 	    			enhancer.setCallbackType(NoOp.class);
-	    			Class<? extends Event> eventClazz = enhancer.createClass();
-	    			eventBindingMap.put(eventClazz, channels);
+	    			eventProxyClazz = enhancer.createClass();
     			}
     			catch (Exception e) {
     				log.error("生成事件代理类失败", e);
     				throw new FatalBeanException("事件代理类生成错误: " + e.getMessage());
     			}
     		}
+    		eventClazzMapping.put(eventName, eventProxyClazz);
+    		channelSet.addAll(channelList);
     	}
     }
 	
-	private void buildPublisherAdvisor(Class<?> clazz) throws BeansException {
+	private void checkPublisherClazz(Class<?> clazz) throws BeansException {
     	if (clazz != null && clazz.isAnnotationPresent(Publisher.class)) {
-    		Publisher publisher = clazz.getAnnotation(Publisher.class);
-    		List<String> defaultEvents = new ArrayList<String>(Arrays.asList(publisher.event()));
-    		Iterator<String> it = defaultEvents.iterator();
-    		while(it.hasNext()) {
-    			String event = it.next();
-    			if (StringUtils.isEmpty(event)) {
-    				it.remove();
-    			}
-    		}
-    		boolean hasDefaultEvent = defaultEvents.size() > 0;
-    		// 检验每一个注释的合法性
             Method[] methods = clazz.getDeclaredMethods();
             for (Method method : methods){
             	if (method.isAnnotationPresent(Interceptor.class)) {
             		Interceptor interceptor = method.getAnnotation(Interceptor.class);
-            		String[] eventArr = interceptor.event();
-            		List<String> methodEvents = new ArrayList<String>(Arrays.asList(eventArr));
-            		Iterator<String> eit = methodEvents.iterator();
-            		while(eit.hasNext()) {
-            			String event = eit.next();
-            			if (StringUtils.isEmpty(event)) {
-            				eit.remove();
-            			}
-            		}
-            		if (!hasDefaultEvent && methodEvents.size() == 0) {
-        				log.error("拦截器至少绑定一个事件");
-        				throw new FatalBeanException("拦截器注册失败: 绑定事件为空");
-            		}
-            		InterceptType type = interceptor.type();
-            		if (type == InterceptType.PARAMETER_BEFORE || type == InterceptType.PARAMETER_AFTER) {
-            			if (method.getParameterTypes() == null || method.getParameterTypes().length == 0) {
-            				log.info("指定方法参数作为事件消息主体时, 应至少设置一个参数");
-            			}
-            		}
-            		else if (type == InterceptType.RETURNING && method.getReturnType() == null) {
-            			log.info("指定返回值作为事件消息主体时, 应设置返回类型");
-            		}
-            		else if (type == InterceptType.ON_EXCEPTION && (method.getExceptionTypes() == null || method.getExceptionTypes().length == 0)) {
-            			log.info("指定异常作为事件消息主体时, 应显式设置抛出异常");
-            		}
+            		checkEvent(clazz, interceptor.event(), true);
             	}
             }
-        	// 创建Advisor的BeanDifinition
-            
     	}
 	}
 	
-	private void buildSubscribeAdvisor(Class<?> clazz) throws BeansException {
+	private void checkSubscribeClazz(Class<?> clazz) throws BeansException {
     	if (clazz != null && clazz.isAnnotationPresent(Subscriber.class)) {
-    		Subscriber subscriber = clazz.getAnnotation(Subscriber.class);
-    		List<String> defaultChannels = new ArrayList<String>(Arrays.asList(subscriber.channel()));
-    		Iterator<String> it = defaultChannels.iterator();
-    		while(it.hasNext()) {
-    			String channel = it.next();
-    			if (StringUtils.isEmpty(channel)) {
-    				it.remove();
-    			}
-    		}
-    		boolean hasDefaultChannel = defaultChannels.size() > 0;
-    		// 检验每一个注释的合法性
             Method[] methods = clazz.getDeclaredMethods();
             for (Method method : methods){
             	if (method.isAnnotationPresent(Listener.class)) {
             		Listener listener = method.getAnnotation(Listener.class);
-            		String[] channelArr = listener.channel();
-            		List<String> methodChannels = new ArrayList<String>(Arrays.asList(channelArr));
-            		Iterator<String> cit = methodChannels.iterator();
-            		while(cit.hasNext()) {
-            			String channel = cit.next();
-            			if (StringUtils.isEmpty(channel)) {
-            				cit.remove();
-            			}
-            		}
-            		if (!hasDefaultChannel && methodChannels.size() == 0) {
-        				log.error("监听器至少订阅一个频道");
-        				throw new FatalBeanException("监听器注册失败: 订阅频道为空");
-            		}
+            		checkChannel(clazz, listener.channel(), true);
             	}
             }
-            // 创建Advisor的BeanDifinition
-            
     	}
 	}
 	
-	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-		BusManager eventBusBean = beanFactory.getBean(DefaultBusManager.class);
-		if (eventBusBean == null) {
-			log.error("监听器至少订阅一个频道");
-			throw new FatalBeanException("监听器注册失败: 订阅频道为空");
+	private void registerAdvisor(BeanDefinitionRegistry registry, BeanDefinitionBuilder builder, String beanName) {
+		builder.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
+		registry.registerBeanDefinition(beanName, builder.getBeanDefinition());
+	}
+	
+	private List<String> checkEvent(Class<?> clazz, String[] events, boolean needCheckExist) throws FatalBeanException {
+		List<String> eventList = events == null ? null : new ArrayList<String>(Arrays.asList(events));
+		if (!CollectionUtils.isEmpty(eventList)) {
+			Iterator<String> it = eventList.iterator();
+			while(it.hasNext()) {
+				String event = it.next();
+				if (StringUtils.isEmpty(event)) {
+					it.remove();
+				}
+				if (needCheckExist && !eventClazzMapping.containsKey(event)) {
+					log.error("事件检查错误, 事件未声明: clazz={}, event={}", clazz, event);
+					throw new FatalBeanException("事件检查错误, 事件未声明: clazz=" + clazz + ", event=" + event);
+				}
+			}
 		}
+		if (CollectionUtils.isEmpty(eventList)) {
+			log.error("事件检查错误, 事件列表为空: clazz={}", clazz);
+			throw new FatalBeanException("事件检查错误, 事件列表为空: clazz=" + clazz);
+		}
+		else {
+			return eventList;
+		}
+	}
+	
+	private List<String> checkChannel(Class<?> clazz, String[] channels, boolean needCheckExist) throws FatalBeanException {
+		List<String> channelList = channels == null ? null : new ArrayList<String>(Arrays.asList(channels));
+		if (!CollectionUtils.isEmpty(channelList)) {
+			Iterator<String> it = channelList.iterator();
+			while(it.hasNext()) {
+				String channel = it.next();
+				if (StringUtils.isEmpty(channel)) {
+					it.remove();
+				}
+				if (needCheckExist && !channelSet.contains(channel)) {
+					log.error("频道检查错误, 频道未声明: clazz={}, channel={}", clazz, channel);
+					throw new FatalBeanException("频道检查错误, 频道未声明: clazz=" + clazz + ", channel=" + channel);
+				}
+			}
+		}
+		if (CollectionUtils.isEmpty(channelList)) {
+			log.error("频道检查错误, 频道列表为空: clazz={}", clazz);
+			throw new FatalBeanException("频道检查错误, 频道列表为空: clazz=" + clazz);
+		}
+		else {
+			return channelList;
+		}
+	}
+	
+	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+		BusManager eventBusBean = beanFactory.getBean(busManagerClazz);
+		if (eventBusBean == null) {
+			log.error("事件总线创建失败, BusManager未生成");
+			throw new FatalBeanException("事件总线创建失败");
+		}
+		BusSignaler signaler = eventBusBean.buildSignaler();
+		BeanDefinition publisherAdvisor = beanFactory.getBeanDefinition(pubAdvisorBeanName);
+		publisherAdvisor.setAttribute("signaler", signaler);
+		BeanDefinition subscriberAdvisor = beanFactory.getBeanDefinition(subAdvisorBeanName);
+		subscriberAdvisor.setAttribute("signaler", signaler);
 	}
 
 }
