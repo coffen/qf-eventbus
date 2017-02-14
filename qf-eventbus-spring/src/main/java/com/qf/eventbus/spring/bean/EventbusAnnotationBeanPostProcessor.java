@@ -1,5 +1,6 @@
 package com.qf.eventbus.spring.bean;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,6 +10,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -27,6 +29,7 @@ import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import com.qf.eventbus.ActionData;
 import com.qf.eventbus.BusManager;
 import com.qf.eventbus.BusSignaler;
 import com.qf.eventbus.DefaultBusManager;
@@ -63,10 +66,12 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 	private String annoPackage;	// 扫描事件、发布者、订阅者的类包, 多个包名用","隔开
 	
 	private final Map<String, Class<? extends Event>> eventClazzMapping = new HashMap<String, Class<? extends Event>>();
+	private final Map<String, Set<Class<? extends Event>>> channelEventMapping = new HashMap<String, Set<Class<? extends Event>>>();
+	private final Map<String, Set<Method>> listenerMapping = new HashMap<String, Set<Method>>();
+	private final Map<Method, Class<?>> methodMapping = new HashMap<Method, Class<?>>();
 	private final Set<String> channelSet = new HashSet<String>();
 	
 	private final String pubAdvisorBeanName = "publisherAdvisor";
-	private final String subAdvisorBeanName = "subscriberAdvisor";
 	private final String busBeanName = "busManager";
 	
 	private final Class<? extends BusManager> busManagerClazz = DefaultBusManager.class;
@@ -116,6 +121,8 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
         		if (clazz.isAnnotationPresent(Subscriber.class)) {
         			checkSubscribeClazz(clazz);
         		}
+        		BeanDefinitionBuilder scanClassBuilder = BeanDefinitionBuilder.genericBeanDefinition(clazz);
+        		registerBeanDifinition(registry, scanClassBuilder, bd.getBeanClassName());
         	}
         	catch (ClassNotFoundException e) {
         		log.error("未找到指定类", e);
@@ -124,11 +131,7 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
     	// 创建PublisherAdvisor的BeanDifinition
 		BeanDefinitionBuilder pubBuilder = BeanDefinitionBuilder.genericBeanDefinition(PublisherAdvisor.class);
 		pubBuilder.getBeanDefinition().setAttribute("eventMapping", eventClazzMapping);
-		registerAdvisor(registry, pubBuilder, pubAdvisorBeanName);
-		
-    	// 创建SubscriberAdvisor的BeanDifinition
-		BeanDefinitionBuilder subBuilder = BeanDefinitionBuilder.genericBeanDefinition(SubscriberAdvisor.class);
-		registerAdvisor(registry, subBuilder, subAdvisorBeanName);
+		registerBeanDifinition(registry, pubBuilder, pubAdvisorBeanName);
 	}
 	
 	private void registerEventBus(BeanDefinitionRegistry registry) {
@@ -179,6 +182,14 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
     				throw new FatalBeanException("事件代理类生成错误: " + e.getMessage());
     			}
     		}
+    		for (String channel : channelList) {
+    			Set<Class<? extends Event>> set = channelEventMapping.get(channel);
+    			if (set == null) {
+    				set = new HashSet<Class<? extends Event>>();
+    				channelEventMapping.put(channel, set);
+    			}
+    			set.add(eventProxyClazz);
+    		}
     		eventClazzMapping.put(eventName, eventProxyClazz);
     		channelSet.addAll(channelList);
     	}
@@ -202,13 +213,22 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
             for (Method method : methods){
             	if (method.isAnnotationPresent(Listener.class)) {
             		Listener listener = method.getAnnotation(Listener.class);
-            		checkChannel(clazz, listener.channel(), true);
+            		List<String> channelList = checkChannel(clazz, listener.channel(), true);
+            		for (String channel : channelList) {
+            			Set<Method> set = listenerMapping.get(channel);
+            			if (set == null) {
+            				set = new HashSet<Method>();
+            				listenerMapping.put(channel, set);
+            			}
+            			set.add(method);
+            		}
+            		methodMapping.put(method, clazz);
             	}
             }
     	}
 	}
 	
-	private void registerAdvisor(BeanDefinitionRegistry registry, BeanDefinitionBuilder builder, String beanName) {
+	private void registerBeanDifinition(BeanDefinitionRegistry registry, BeanDefinitionBuilder builder, String beanName) {
 		builder.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
 		registry.registerBeanDefinition(beanName, builder.getBeanDefinition());
 	}
@@ -261,17 +281,76 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 		}
 	}
 	
-	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+	public void postProcessBeanFactory(final ConfigurableListableBeanFactory beanFactory) throws BeansException {
 		BusManager eventBusBean = beanFactory.getBean(busManagerClazz);
 		if (eventBusBean == null) {
 			log.error("事件总线创建失败, BusManager未生成");
 			throw new FatalBeanException("事件总线创建失败");
 		}
 		BusSignaler signaler = eventBusBean.buildSignaler();
+		if (signaler == null) {
+			log.error("Signaler创建失败, BusSignaler未生成");
+			throw new FatalBeanException("Signaler创建失败");
+		}
+		// 创建频道
+		if (channelSet.size() > 0) {
+			for (String channel : channelSet) {
+				if (StringUtils.isEmpty(channel)) {
+					continue;
+				}
+				if (signaler.buildChannel(channel)) {
+					signaler.openChannel(channel);
+				}
+				else {
+					log.error("频道创建失败, channel={}", channel);
+					throw new FatalBeanException("频道创建失败, channel=" + channel);
+				}
+			}
+		}
+		// 注册发布器
+		Iterator<Entry<String, Set<Class<? extends Event>>>> eventIterator = channelEventMapping.entrySet().iterator();
+		while (eventIterator.hasNext()) {
+			Entry<String, Set<Class<? extends Event>>> entry = eventIterator.next();
+			String ch = entry.getKey();
+			Set<Class<? extends Event>> eventSet = entry.getValue();
+			if (!StringUtils.isEmpty(ch) && eventSet.size() > 0) {
+				for (Class<? extends Event> clazz : eventSet) {
+					if (clazz != null) {
+						signaler.register(ch, clazz);
+					}
+				}
+			}
+		}
+		// 订阅频道
+		Iterator<Entry<String, Set<Method>>> listenerIterator = listenerMapping.entrySet().iterator();
+		while (listenerIterator.hasNext()) {
+			Entry<String, Set<Method>> entry = listenerIterator.next();
+			String ch = entry.getKey();
+			Set<Method> methodSet = entry.getValue();
+			if (!StringUtils.isEmpty(ch) && methodSet.size() > 0) {
+				for (final Method method : methodSet) {
+					if (method != null) {
+						//TODO
+						Object target = beanFactory.getBean(methodMapping.get(method));
+						signaler.subscribe(ch, new com.qf.eventbus.Listener() {							
+							private Class<?> subscriberClazz = methodMapping.get(method);
+							
+							public <T> void onEvent(ActionData<T> data) {
+								try {
+									method.invoke(subscriberClazz, data.getData());
+								} 
+								catch (BeansException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+									log.error("监听器处理错误: method=" + subscriberClazz.getName() + "." + method.getName(), e);
+								}
+							}
+						});
+					}
+				}
+			}
+		}
+		
 		BeanDefinition publisherAdvisor = beanFactory.getBeanDefinition(pubAdvisorBeanName);
 		publisherAdvisor.setAttribute("signaler", signaler);
-		BeanDefinition subscriberAdvisor = beanFactory.getBeanDefinition(subAdvisorBeanName);
-		subscriberAdvisor.setAttribute("signaler", signaler);
 	}
 
 }
