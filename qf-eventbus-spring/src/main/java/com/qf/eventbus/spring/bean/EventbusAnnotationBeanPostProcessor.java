@@ -27,6 +27,7 @@ import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.NoOp;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
+import org.springframework.context.annotation.ScannedGenericBeanDefinition;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -91,7 +92,7 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 		AopConfigUtils.registerAutoProxyCreatorIfNecessary(registry);
 		
 		// 注册BusServerl类型Bean
-		registerEventBus(registry);
+		registerBeanDifinition(registry, BeanDefinitionBuilder.genericBeanDefinition(busManagerClazz), busBeanName);;
 		
         String[] scanPackages = StringUtils.tokenizeToStringArray(annoPackage, ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS);
         if (scanPackages == null || scanPackages.length < 1) {
@@ -124,8 +125,11 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
         		if (clazz.isAnnotationPresent(Subscriber.class)) {
         			checkSubscribeClazz(clazz);
         		}
-        		BeanDefinitionBuilder scanClassBuilder = BeanDefinitionBuilder.genericBeanDefinition(clazz);
-        		registerBeanDifinition(registry, scanClassBuilder, bd.getBeanClassName());
+        		if (bd instanceof ScannedGenericBeanDefinition) {
+        			((ScannedGenericBeanDefinition)bd).setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
+        		}
+        		bd.setScope(BeanDefinition.SCOPE_SINGLETON);
+    			registry.registerBeanDefinition(bd.getBeanClassName(), bd);
         	}
         	catch (ClassNotFoundException e) {
         		log.error("未找到指定类", e);
@@ -136,11 +140,10 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 		registerBeanDifinition(registry, pubBuilder, pubAdvisorBeanName);
 	}
 	
-	private void registerEventBus(BeanDefinitionRegistry registry) {
-		BeanDefinitionBuilder eventBusBuilder = BeanDefinitionBuilder.genericBeanDefinition(busManagerClazz);
-		eventBusBuilder.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
-		eventBusBuilder.setScope(BeanDefinition.SCOPE_SINGLETON);
-		registry.registerBeanDefinition(busBeanName, eventBusBuilder.getBeanDefinition());
+	private void registerBeanDifinition(BeanDefinitionRegistry registry, BeanDefinitionBuilder builder, String beanName) {
+		builder.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
+		builder.setScope(BeanDefinition.SCOPE_SINGLETON);
+		registry.registerBeanDefinition(beanName, builder.getBeanDefinition());
 	}
 	
     private Set<BeanDefinition> findCandidateComponents(ClassPathBeanDefinitionScanner scanner, String... scanPackages){
@@ -228,11 +231,6 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
             	}
             }
     	}
-	}
-	
-	private void registerBeanDifinition(BeanDefinitionRegistry registry, BeanDefinitionBuilder builder, String beanName) {
-		builder.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
-		registry.registerBeanDefinition(beanName, builder.getBeanDefinition());
 	}
 	
 	private List<String> checkEvent(Class<?> clazz, String[] events, boolean needCheckExist) throws FatalBeanException {
