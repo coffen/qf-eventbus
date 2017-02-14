@@ -10,19 +10,19 @@ import com.qf.eventbus.spring.anno.Subscriber;
 @Subscriber
 public class ProductService {
 	
-	@Interceptor(event={"cacheEvent", "esEvent"}, type=InterceptType.RETURNING)
-	public void save() {
-		
+	@Interceptor(event={"cacheEvent", "esEvent"}, type=InterceptType.PARAMETER_AFTER)
+	public void save(long id) {
+		System.out.println("product saved: " + id);
 	}
 	
-	@Interceptor(event="cacheEvent")
-	public void updateArchive() {
-		
+	@Interceptor(event="cacheEvent", type=InterceptType.PARAMETER_AFTER)
+	public void updateArchive(long id) {
+		System.out.println("product deleted: " + id);
 	}
 	
 	@Listener(channel="es")
-	public void updateAmountAndSales() {
-		
+	public void updateEs(long id) {
+		System.out.println("product es updated: " + id);
 	}
 	
 }

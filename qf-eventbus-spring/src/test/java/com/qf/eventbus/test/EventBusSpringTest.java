@@ -34,8 +34,8 @@ public class EventBusSpringTest {
 	
 	@Test
 	public void test() {
-		Object obj = context.getBean("eventBusBean");
-		System.out.println(obj);
+		ProductService productService = (ProductService)context.getBean("com.qf.eventbus.test.ProductService");
+		productService.save(10029L);
 	}
 
 }

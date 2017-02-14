@@ -330,14 +330,12 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 			if (!StringUtils.isEmpty(ch) && methodSet.size() > 0) {
 				for (final Method method : methodSet) {
 					if (method != null) {
-						//TODO
-						Object target = beanFactory.getBean(methodMapping.get(method));
+						final Class<?> subscriberClazz = methodMapping.get(method);
 						signaler.subscribe(ch, new com.qf.eventbus.Listener() {							
-							private Class<?> subscriberClazz = methodMapping.get(method);
-							
+							Object target = beanFactory.getBean(subscriberClazz);
 							public <T> void onEvent(ActionData<T> data) {
 								try {
-									method.invoke(subscriberClazz, data.getData());
+									method.invoke(target, data.getData());
 								} 
 								catch (BeansException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 									log.error("监听器处理错误: method=" + subscriberClazz.getName() + "." + method.getName(), e);

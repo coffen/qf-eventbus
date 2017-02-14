@@ -7,8 +7,8 @@ import com.qf.eventbus.spring.anno.Subscriber;
 public class CacheService {
 	
 	@Listener(channel="cache")
-	public void onChange() {
-		
+	public void onChange(long id) {
+		System.out.println("product cache updated: " + id);
 	}
 
 }
