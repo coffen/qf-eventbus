@@ -31,9 +31,8 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import com.qf.eventbus.BusManager;
+import com.qf.eventbus.BusServer;
 import com.qf.eventbus.BusSignaler;
-import com.qf.eventbus.DefaultBusManager;
 import com.qf.eventbus.Event;
 import com.qf.eventbus.spring.anno.EventBinding;
 import com.qf.eventbus.spring.anno.InterceptType;
@@ -68,12 +67,9 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 	private final Map<String, Set<Class<? extends Event>>> channelEventMapping = new HashMap<String, Set<Class<? extends Event>>>();
 	private final Set<InterceptorAttribute> interceptorSet = new HashSet<InterceptorAttribute>();
 	private final Set<ListenerAttribute> listenerSet = new HashSet<ListenerAttribute>();
-	private final Set<AdviceListener> adviceSet = new HashSet<AdviceListener>();
 	
 	private final Class<?> PUBLISHER_ADVISOR_BEAN_CLASS = PublisherAdvisor.class;
-	private final Class<?> BUS_BEAN_CLASS = DefaultBusManager.class;
-	
-	private final Class<? extends BusManager> busManagerClazz = DefaultBusManager.class;
+	private final Class<?> BUS_BEAN_CLASS = BusServer.class;
 	
 	private final LocalVariableTableParameterNameDiscoverer discoverer = new LocalVariableTableParameterNameDiscoverer();
 	
@@ -293,11 +289,12 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 	}
 	
 	public void postProcessBeanFactory(final ConfigurableListableBeanFactory beanFactory) throws BeansException {
-		BusManager eventBusBean = beanFactory.getBean(busManagerClazz);
+		BusServer eventBusBean = (BusServer)beanFactory.getBean(BUS_BEAN_CLASS);
 		if (eventBusBean == null) {
-			log.error("事件总线创建失败, BusManager未生成");
-			throw new FatalBeanException("事件总线创建失败");
+			log.error("事件总线服务创建失败");
+			throw new FatalBeanException("事件总线服务创建失败");
 		}
+		eventBusBean.startAsync();
 		BusSignaler signaler = eventBusBean.buildSignaler();
 		if (signaler == null) {
 			log.error("Signaler创建失败, BusSignaler未生成");
@@ -339,8 +336,8 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 			if (attribute != null && !CollectionUtils.isEmpty(attribute.getChannelList())) {
 				for (String channel : attribute.getChannelList()) {
 					AdviceListener advice = new AdviceListener(attribute);
+					advice.setFactory(beanFactory);
 					signaler.subscribe(channel, advice);
-					adviceSet.add(advice);
 				}
 			}
 		}

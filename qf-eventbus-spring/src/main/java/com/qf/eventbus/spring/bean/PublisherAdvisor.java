@@ -83,17 +83,18 @@ public class PublisherAdvisor extends AbstractPointcutAdvisor {
 					return invocation.proceed();
 				}
 				Method m = invocation.getMethod();
-				Interceptor interceptor = m.getAnnotation(Interceptor.class);
+				Method m1 = targetClass.getMethod(m.getName(), m.getParameterTypes());
+				Interceptor interceptor = m1.getAnnotation(Interceptor.class);
 				InterceptType type = interceptor.type();
 				String[] events = interceptor.event();
 				String expr = interceptor.expr();
 				LocalVariableTableParameterNameDiscoverer u = new LocalVariableTableParameterNameDiscoverer();
-				String[] parameterNames = u.getParameterNames(m);
+				String[] parameterNames = u.getParameterNames(m1);
 				Object retured = null;
 				Object data = null;
 				if (type == InterceptType.PARAMETER_BEFORE) {
 					data = parseParameter(parameterNames, invocation.getArguments(), expr);
-					fireEvents(events, invocation.getThis(), m, data);
+					fireEvents(events, data);
 					retured = invocation.proceed();
 				}
 				else if (type == InterceptType.PARAMETER_AFTER || type == InterceptType.RETURNING) {
@@ -104,14 +105,14 @@ public class PublisherAdvisor extends AbstractPointcutAdvisor {
 					else {
 						data = parseReturned(retured, expr);
 					}
-					fireEvents(events, invocation.getThis(), m, data);
+					fireEvents(events, data);
 				}
 				else {
 					try {
 						retured = invocation.proceed();
 					}
 					catch (Exception e) {
-						fireEvents(events, invocation.getThis(), m, e);
+						fireEvents(events, e);
 					}
 				}
 				return retured;
@@ -133,12 +134,12 @@ public class PublisherAdvisor extends AbstractPointcutAdvisor {
 		return SpelExpressionUtil.parse(returned, expression);
 	}
 	
-	private void fireEvents(String[] events, Object target, Method method, Object data) {
+	private void fireEvents(String[] events, Object data) {
 		if (events != null && events.length > 0) {
 			for (String event : events) {
 				Class<? extends Event> eventClazz = eventMapping.get(event);
 				if (eventClazz != null) {
-					signaler.fileEvent(eventClazz, new ActionData<EventData>(new EventData(target, method, data)));
+					signaler.fileEvent(eventClazz, new ActionData<Object>(data));
 				}
 			}
 		}
@@ -147,31 +148,6 @@ public class PublisherAdvisor extends AbstractPointcutAdvisor {
 	private void buildPointcut() {
 		AnnotationMatchingPointcut methodPointcut = AnnotationMatchingPointcut.forMethodAnnotation(Interceptor.class);
 		this.pointCut = methodPointcut;
-	}
-	
-	public class EventData {
-		
-		private Object target;
-		private Method method;
-		private Object data;
-		
-		public EventData(Object target, Method method, Object data) {
-			this.target = target;
-			this.method = method;
-			this.data = data;
-		}
-		
-		public Object getTarget() {
-			return target;
-		}
-		
-		public Method getMethod() {
-			return method;
-		}
-		
-		public Object getData() {
-			return data;
-		}
 	}
 
 }

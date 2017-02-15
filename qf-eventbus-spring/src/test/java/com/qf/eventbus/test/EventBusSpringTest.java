@@ -1,9 +1,9 @@
 package com.qf.eventbus.test;
 
-import org.junit.Before;
 import org.junit.Test;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 
 /**
  * 
@@ -23,18 +23,14 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
  * @version: v1.0
  *
  */
-public class EventBusSpringTest {
+@ContextConfiguration(classes = { SpringConfig.class })
+public class EventBusSpringTest extends AbstractJUnit4SpringContextTests {
 	
-    private ApplicationContext context;
-	
-    @Before
-	public void init() {
-    	context = new ClassPathXmlApplicationContext("classpath:spring-test.xml");
-	}
+    @Autowired
+    private ProductService productService;
 	
 	@Test
 	public void test() {
-		ProductService productService = (ProductService)context.getBean("productService");
 		productService.save(10029L);
 	}
 
