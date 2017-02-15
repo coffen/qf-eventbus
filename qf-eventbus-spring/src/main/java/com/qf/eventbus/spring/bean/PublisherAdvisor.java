@@ -10,7 +10,6 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.aop.Pointcut;
 import org.springframework.aop.support.AbstractPointcutAdvisor;
-import org.springframework.aop.support.ComposablePointcut;
 import org.springframework.aop.support.annotation.AnnotationMatchingPointcut;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 
@@ -19,7 +18,6 @@ import com.qf.eventbus.BusSignaler;
 import com.qf.eventbus.Event;
 import com.qf.eventbus.spring.anno.InterceptType;
 import com.qf.eventbus.spring.anno.Interceptor;
-import com.qf.eventbus.spring.anno.Publisher;
 import com.qf.eventbus.spring.util.SpelExpressionUtil;
 
 /**
@@ -146,9 +144,8 @@ public class PublisherAdvisor extends AbstractPointcutAdvisor {
 	}
 	
 	private void buildPointcut() {
-		AnnotationMatchingPointcut clazzPointcut = AnnotationMatchingPointcut.forClassAnnotation(Publisher.class);
 		AnnotationMatchingPointcut methodPointcut = AnnotationMatchingPointcut.forMethodAnnotation(Interceptor.class);
-		this.pointCut = new ComposablePointcut(clazzPointcut).union(methodPointcut);
+		this.pointCut = methodPointcut;
 	}
 
 }

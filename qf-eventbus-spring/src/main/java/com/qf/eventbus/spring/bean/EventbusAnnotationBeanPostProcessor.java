@@ -27,7 +27,7 @@ import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.NoOp;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
-import org.springframework.context.annotation.ScannedGenericBeanDefinition;
+import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -39,9 +39,6 @@ import com.qf.eventbus.Event;
 import com.qf.eventbus.spring.anno.EventBinding;
 import com.qf.eventbus.spring.anno.Interceptor;
 import com.qf.eventbus.spring.anno.Listener;
-import com.qf.eventbus.spring.anno.Publisher;
-import com.qf.eventbus.spring.anno.Subscriber;
-import com.qf.eventbus.spring.config.ClassPathEventBusBeanDefinitionScanner;
 
 /**
  * 
@@ -70,7 +67,6 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 	private final Map<String, Class<? extends Event>> eventClazzMapping = new HashMap<String, Class<? extends Event>>();
 	private final Map<String, Set<Class<? extends Event>>> channelEventMapping = new HashMap<String, Set<Class<? extends Event>>>();
 	private final Map<String, Set<Method>> listenerMapping = new HashMap<String, Set<Method>>();
-	private final Map<Method, Class<?>> methodMapping = new HashMap<Method, Class<?>>();
 	private final Set<String> channelSet = new HashSet<String>();
 	
 	private final String pubAdvisorBeanName = "publisherAdvisor";
@@ -91,15 +87,13 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 	public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
 		AopConfigUtils.registerAutoProxyCreatorIfNecessary(registry);
 		
-		// 注册BusServerl类型Bean
-		registerBeanDifinition(registry, BeanDefinitionBuilder.genericBeanDefinition(busManagerClazz), busBeanName);;
-		
         String[] scanPackages = StringUtils.tokenizeToStringArray(annoPackage, ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS);
         if (scanPackages == null || scanPackages.length < 1) {
         	log.error("包名指定错误, 无法执行BeanDefinitionRegistryPostProcessor: annoPackage={}", annoPackage);
         	throw new FatalBeanException("BeanDefinitionRegistryPostProcessor执行错误, 包名无效: " + annoPackage);  
         }
-        ClassPathEventBusBeanDefinitionScanner scanner = new ClassPathEventBusBeanDefinitionScanner(registry);
+        ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(registry);
+        scanner.addIncludeFilter(new AnnotationTypeFilter(EventBinding.class));
         ClassLoader classLoader = scanner.getResourceLoader().getClassLoader();
         Set<BeanDefinition> beanDefinitions = findCandidateComponents(scanner, scanPackages);
         
@@ -119,22 +113,21 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
         for(BeanDefinition bd : beanDefinitions) {
         	try {
         		Class<?> clazz = classLoader.loadClass(bd.getBeanClassName());
-        		if (clazz.isAnnotationPresent(Publisher.class)) {
-        			checkPublisherClazz(clazz);
-        		}
-        		if (clazz.isAnnotationPresent(Subscriber.class)) {
-        			checkSubscribeClazz(clazz);
-        		}
-        		if (bd instanceof ScannedGenericBeanDefinition) {
-        			((ScannedGenericBeanDefinition)bd).setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
-        		}
-        		bd.setScope(BeanDefinition.SCOPE_SINGLETON);
-    			registry.registerBeanDefinition(bd.getBeanClassName(), bd);
+       			checkPublisherClazz(clazz);
+       			checkSubscribeClazz(clazz);
+//        		if (bd instanceof ScannedGenericBeanDefinition) {
+//        			((ScannedGenericBeanDefinition)bd).setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
+//        		}
+//        		bd.setScope(BeanDefinition.SCOPE_SINGLETON);
+//    			registry.registerBeanDefinition(bd.getBeanClassName(), bd);
         	}
         	catch (ClassNotFoundException e) {
         		log.error("未找到指定类", e);
         	}
-        }
+        }		
+		// 注册BusServerl类型Bean
+		registerBeanDifinition(registry, BeanDefinitionBuilder.genericBeanDefinition(busManagerClazz), busBeanName);
+        
     	// 创建PublisherAdvisor的BeanDifinition
 		BeanDefinitionBuilder pubBuilder = BeanDefinitionBuilder.genericBeanDefinition(PublisherAdvisor.class);
 		registerBeanDifinition(registry, pubBuilder, pubAdvisorBeanName);
@@ -201,7 +194,7 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
     }
 	
 	private void checkPublisherClazz(Class<?> clazz) throws BeansException {
-    	if (clazz != null && clazz.isAnnotationPresent(Publisher.class)) {
+    	if (clazz != null) {
             Method[] methods = clazz.getDeclaredMethods();
             for (Method method : methods){
             	if (method.isAnnotationPresent(Interceptor.class)) {
@@ -213,7 +206,7 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 	}
 	
 	private void checkSubscribeClazz(Class<?> clazz) throws BeansException {
-    	if (clazz != null && clazz.isAnnotationPresent(Subscriber.class)) {
+    	if (clazz != null) {
             Method[] methods = clazz.getDeclaredMethods();
             for (Method method : methods){
             	if (method.isAnnotationPresent(Listener.class)) {
@@ -227,7 +220,6 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
             			}
             			set.add(method);
             		}
-            		methodMapping.put(method, clazz);
             	}
             }
     	}
@@ -330,18 +322,8 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 			if (!StringUtils.isEmpty(ch) && methodSet.size() > 0) {
 				for (final Method method : methodSet) {
 					if (method != null) {
-						final Class<?> subscriberClazz = methodMapping.get(method);
-						signaler.subscribe(ch, new com.qf.eventbus.Listener() {							
-							Object target = beanFactory.getBean(subscriberClazz);
-							public <T> void onEvent(ActionData<T> data) {
-								try {
-									method.invoke(target, data.getData());
-								} 
-								catch (BeansException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-									log.error("监听器处理错误: method=" + subscriberClazz.getName() + "." + method.getName(), e);
-								}
-							}
-						});
+						final Class<?> subscriberClazz = method.getDeclaringClass();
+						signaler.subscribe(ch, new AdviceListener(subscriberClazz, method.getName(), method.getParameterTypes()));
 					}
 				}
 			}

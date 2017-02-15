@@ -1,28 +1,11 @@
 package com.qf.eventbus.test;
 
-import com.qf.eventbus.spring.anno.InterceptType;
-import com.qf.eventbus.spring.anno.Interceptor;
-import com.qf.eventbus.spring.anno.Listener;
-import com.qf.eventbus.spring.anno.Publisher;
-import com.qf.eventbus.spring.anno.Subscriber;
-
-@Publisher
-@Subscriber
-public class ProductService {
+public interface ProductService {
 	
-	@Interceptor(event={"cacheEvent", "esEvent"}, type=InterceptType.PARAMETER_AFTER)
-	public void save(long id) {
-		System.out.println("product saved: " + id);
-	}
+	public void save(long id);
 	
-	@Interceptor(event="cacheEvent", type=InterceptType.PARAMETER_AFTER)
-	public void updateArchive(long id) {
-		System.out.println("product deleted: " + id);
-	}
+	public void updateArchive(long id);
 	
-	@Listener(channel="es")
-	public void updateEs(long id) {
-		System.out.println("product es updated: " + id);
-	}
+	public void updateEs(long id);
 	
 }

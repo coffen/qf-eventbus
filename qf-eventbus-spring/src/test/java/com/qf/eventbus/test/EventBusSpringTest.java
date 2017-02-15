@@ -34,7 +34,7 @@ public class EventBusSpringTest {
 	
 	@Test
 	public void test() {
-		ProductService productService = (ProductService)context.getBean("com.qf.eventbus.test.ProductService");
+		ProductService productService = (ProductService)context.getBean("productService");
 		productService.save(10029L);
 	}
 
