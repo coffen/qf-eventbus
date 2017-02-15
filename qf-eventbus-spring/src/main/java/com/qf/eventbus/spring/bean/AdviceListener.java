@@ -6,6 +6,8 @@ import java.lang.reflect.Method;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.FatalBeanException;
+import org.springframework.beans.factory.BeanFactory;
 
 import com.qf.eventbus.ActionData;
 import com.qf.eventbus.Listener;
@@ -14,45 +16,20 @@ public class AdviceListener implements Listener {
 	
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 	
-	public AdviceListener(Class<?> targetClazz, String methodName, Class<?>[] methodParameterTypes) {
-		this.targetClazz = targetClazz;
-		this.methodName = methodName;
-		this.methodParameterTypes = methodParameterTypes;
-	}
-	
-	private Class<?> targetClazz;
-	private String methodName;
-	private Class<?>[] methodParameterTypes;
-	
+	private ListenerAttribute attribute;
 	private Object targetProxy;
 	private Method method;
 	
-	public Class<?> getTargetClazz() {
-		return targetClazz;
+	public AdviceListener(ListenerAttribute attribute) {
+		this.attribute = attribute;
 	}
 	
-	public String getMethodName() {
-		return methodName;
+	public ListenerAttribute getAttribute() {
+		return attribute;
 	}
 	
-	public Class<?>[] getMethodParameterTypes() {
-		return methodParameterTypes;
-	}
-	
-	public void setTargetProxy(Object targetProxy) {
-		this.targetProxy = targetProxy;
-	}
-	
-	public Object getTargetProxy() {
-		return targetProxy;
-	}
-	
-	public void setMethod(Method method) {
+	void setMethod(Method method) {
 		this.method = method;
-	}
-	
-	public Method getMethod() {
-		return method;
 	}
 	
 	public <T> void onEvent(ActionData<T> data) {
@@ -60,8 +37,17 @@ public class AdviceListener implements Listener {
 			method.invoke(targetProxy, data.getData());
 		}
 		catch (BeansException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			log.error("监听器处理错误: method=" + targetClazz.getName() + "." + method.getName(), e);
+			log.error("监听器处理错误: method=" + attribute.getTargetClass().getName() + "." + attribute.getMethodName(), e);
 		}
+	}
+
+	public void fillProxy(BeanFactory beanFactory) throws BeansException, NoSuchMethodException, SecurityException {
+		Object obj = beanFactory.getBean(attribute.getTargetClass());
+		if (obj == null) {
+			throw new FatalBeanException("未找到指定类型的代理类: " + attribute.getTargetClass());
+		}
+		targetProxy = obj;
+		method = obj.getClass().getMethod(attribute.getMethodName(), attribute.getMethodParameterTypes());
 	}
 
 }

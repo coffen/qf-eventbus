@@ -2,7 +2,9 @@ package com.qf.eventbus.spring.bean;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.aopalliance.aop.Advice;
 import org.aopalliance.intercept.MethodInterceptor;
@@ -10,8 +12,14 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.aop.Pointcut;
 import org.springframework.aop.support.AbstractPointcutAdvisor;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.aop.support.annotation.AnnotationMatchingPointcut;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.FatalBeanException;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
+import org.springframework.util.CollectionUtils;
 
 import com.qf.eventbus.ActionData;
 import com.qf.eventbus.BusSignaler;
@@ -38,13 +46,16 @@ import com.qf.eventbus.spring.util.SpelExpressionUtil;
  * @version: v1.0
  *
  */
-public class PublisherAdvisor extends AbstractPointcutAdvisor {
+public class PublisherAdvisor extends AbstractPointcutAdvisor implements BeanFactoryAware {
 	
 	private static final long serialVersionUID = 7098195944662142447L;
+	
+	private BeanFactory factory;
 	
 	private BusSignaler signaler;
 	
 	private Map<String, Class<? extends Event>> eventMapping = new HashMap<String, Class<? extends Event>>();
+	private Set<AdviceListener> adviceSet = new HashSet<AdviceListener>();
 	
 	private Advice advice;
 	private Pointcut pointCut;
@@ -66,8 +77,18 @@ public class PublisherAdvisor extends AbstractPointcutAdvisor {
 		this.eventMapping = eventMapping;
 	}
 	
-	public Map<String, Class<? extends Event>> getEventMapping() {
-		return eventMapping;
+	public void setAdviceSet(Set<AdviceListener> adviceSet) throws BeansException {
+		this.adviceSet = adviceSet;
+		if (!CollectionUtils.isEmpty(this.adviceSet)) {
+			for (AdviceListener lisn : this.adviceSet) {
+				try {
+					lisn.fillProxy(factory);
+				}
+				catch (Exception e) {
+					throw new FatalBeanException("监听器设置代理失败");
+				}
+			}
+		}
 	}
 
 	public Pointcut getPointcut() {
@@ -81,6 +102,10 @@ public class PublisherAdvisor extends AbstractPointcutAdvisor {
 	private void buildAdvice() {
 		this.advice = new MethodInterceptor() {
 			public Object invoke(MethodInvocation invocation) throws Throwable {
+				Class<?> targetClass = AopUtils.getTargetClass(invocation.getThis());
+				if (targetClass == null) {
+					return invocation.proceed();
+				}
 				Method m = invocation.getMethod();
 				Interceptor interceptor = m.getAnnotation(Interceptor.class);
 				InterceptType type = interceptor.type();
@@ -146,6 +171,10 @@ public class PublisherAdvisor extends AbstractPointcutAdvisor {
 	private void buildPointcut() {
 		AnnotationMatchingPointcut methodPointcut = AnnotationMatchingPointcut.forMethodAnnotation(Interceptor.class);
 		this.pointCut = methodPointcut;
+	}
+	
+	public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+		this.factory = beanFactory;		
 	}
 
 }

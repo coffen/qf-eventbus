@@ -1,0 +1,108 @@
+package com.qf.eventbus.spring.bean;
+
+import java.util.Arrays;
+import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
+
+import com.qf.eventbus.spring.anno.InterceptType;
+
+/**
+ * 
+ * <p>
+ * Project Name: C2C商城
+ * <br>
+ * Description: 拦截器注释属性
+ * <br>
+ * File Name: InterceptorAttribute.java
+ * <br>
+ * Copyright: Copyright (C) 2015 All Rights Reserved.
+ * <br>
+ * Company: 杭州偶尔科技有限公司
+ * <br>
+ * @author 穷奇
+ * @create time：2017年2月15日 上午11:48:39 
+ * @version: v1.0
+ *
+ */
+public class InterceptorAttribute {
+
+	private Class<?> targetClass;
+	private String methodName;
+	private Class<?>[] methodParameterTypes;
+	private String[] methodparameterNames;
+	
+	private List<String> eventList;
+	private InterceptType interceptType;
+	private String expression;
+	
+	public Class<?> getTargetClass() {
+		return targetClass;
+	}
+	
+	public void setTargetClass(Class<?> targetClass) {
+		this.targetClass = targetClass;
+	}
+	
+	public String getMethodName() {
+		return methodName;
+	}
+	
+	public void setMethodName(String methodName) {
+		this.methodName = methodName;
+	}
+	
+	public Class<?>[] getMethodParameterTypes() {
+		return methodParameterTypes;
+	}
+	
+	public void setMethodParameterTypes(Class<?>[] methodParameterTypes) {
+		this.methodParameterTypes = methodParameterTypes;
+	}
+	
+	public String[] getMethodparameterNames() {
+		return methodparameterNames;
+	}
+	
+	public void setMethodparameterNames(String[] methodparameterNames) {
+		this.methodparameterNames = methodparameterNames;
+	}
+	
+	public List<String> getEventList() {
+		return eventList;
+	}
+
+	public void setEventList(List<String> eventList) {
+		this.eventList = eventList;
+	}
+
+	public InterceptType getInterceptType() {
+		return interceptType;
+	}
+
+	public void setInterceptType(InterceptType interceptType) {
+		this.interceptType = interceptType;
+	}
+
+	public String getExpression() {
+		return expression;
+	}
+
+	public void setExpression(String expression) {
+		this.expression = expression;
+	}
+
+	public boolean equals(Object obj) {
+		if (targetClass == null || StringUtils.isEmpty(methodName) || !(obj instanceof InterceptorAttribute)) {
+			return false;
+		}
+		InterceptorAttribute attribute = (InterceptorAttribute)obj;
+		if ((targetClass != attribute.getTargetClass()) || !(methodName.equals(attribute.getMethodName()))) {
+			return false;
+		}
+		Class<?>[] clazzArr1 = methodParameterTypes == null ? new Class<?>[0] : methodParameterTypes;
+		Class<?>[] clazzArr2 = attribute.getMethodParameterTypes() == null ? new Class<?>[0] : attribute.getMethodParameterTypes();
+		return Arrays.deepEquals(clazzArr1, clazzArr2);
+	}
+
+}

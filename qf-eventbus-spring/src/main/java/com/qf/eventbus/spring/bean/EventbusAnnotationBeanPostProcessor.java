@@ -1,6 +1,5 @@
 package com.qf.eventbus.spring.bean;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,16 +26,17 @@ import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.NoOp;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
+import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import com.qf.eventbus.ActionData;
 import com.qf.eventbus.BusManager;
 import com.qf.eventbus.BusSignaler;
 import com.qf.eventbus.DefaultBusManager;
 import com.qf.eventbus.Event;
 import com.qf.eventbus.spring.anno.EventBinding;
+import com.qf.eventbus.spring.anno.InterceptType;
 import com.qf.eventbus.spring.anno.Interceptor;
 import com.qf.eventbus.spring.anno.Listener;
 
@@ -66,13 +66,16 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 	
 	private final Map<String, Class<? extends Event>> eventClazzMapping = new HashMap<String, Class<? extends Event>>();
 	private final Map<String, Set<Class<? extends Event>>> channelEventMapping = new HashMap<String, Set<Class<? extends Event>>>();
-	private final Map<String, Set<Method>> listenerMapping = new HashMap<String, Set<Method>>();
-	private final Set<String> channelSet = new HashSet<String>();
+	private final Set<InterceptorAttribute> interceptorSet = new HashSet<InterceptorAttribute>();
+	private final Set<ListenerAttribute> listenerSet = new HashSet<ListenerAttribute>();
+	private final Set<AdviceListener> adviceSet = new HashSet<AdviceListener>();
 	
-	private final String pubAdvisorBeanName = "publisherAdvisor";
-	private final String busBeanName = "busManager";
+	private final Class<?> PUBLISHER_ADVISOR_BEAN_CLASS = PublisherAdvisor.class;
+	private final Class<?> BUS_BEAN_CLASS = DefaultBusManager.class;
 	
 	private final Class<? extends BusManager> busManagerClazz = DefaultBusManager.class;
+	
+	private final LocalVariableTableParameterNameDiscoverer discoverer = new LocalVariableTableParameterNameDiscoverer();
 	
 	public EventbusAnnotationBeanPostProcessor() {}
 	
@@ -113,24 +116,18 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
         for(BeanDefinition bd : beanDefinitions) {
         	try {
         		Class<?> clazz = classLoader.loadClass(bd.getBeanClassName());
-       			checkPublisherClazz(clazz);
-       			checkSubscribeClazz(clazz);
-//        		if (bd instanceof ScannedGenericBeanDefinition) {
-//        			((ScannedGenericBeanDefinition)bd).setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
-//        		}
-//        		bd.setScope(BeanDefinition.SCOPE_SINGLETON);
-//    			registry.registerBeanDefinition(bd.getBeanClassName(), bd);
+       			checkAnnoClazz(clazz);
         	}
         	catch (ClassNotFoundException e) {
         		log.error("未找到指定类", e);
         	}
         }		
 		// 注册BusServerl类型Bean
-		registerBeanDifinition(registry, BeanDefinitionBuilder.genericBeanDefinition(busManagerClazz), busBeanName);
+		registerBeanDifinition(registry, BeanDefinitionBuilder.genericBeanDefinition(BUS_BEAN_CLASS), BUS_BEAN_CLASS.getName());
         
     	// 创建PublisherAdvisor的BeanDifinition
-		BeanDefinitionBuilder pubBuilder = BeanDefinitionBuilder.genericBeanDefinition(PublisherAdvisor.class);
-		registerBeanDifinition(registry, pubBuilder, pubAdvisorBeanName);
+		BeanDefinitionBuilder pubBuilder = BeanDefinitionBuilder.genericBeanDefinition(PUBLISHER_ADVISOR_BEAN_CLASS);
+		registerBeanDifinition(registry, pubBuilder, PUBLISHER_ADVISOR_BEAN_CLASS.getName());
 	}
 	
 	private void registerBeanDifinition(BeanDefinitionRegistry registry, BeanDefinitionBuilder builder, String beanName) {
@@ -189,40 +186,62 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
     			set.add(eventProxyClazz);
     		}
     		eventClazzMapping.put(eventName, eventProxyClazz);
-    		channelSet.addAll(channelList);
     	}
     }
 	
-	private void checkPublisherClazz(Class<?> clazz) throws BeansException {
+	private void checkAnnoClazz(Class<?> clazz) throws BeansException {
     	if (clazz != null) {
             Method[] methods = clazz.getDeclaredMethods();
-            for (Method method : methods){
+            for (Method method : methods) {
             	if (method.isAnnotationPresent(Interceptor.class)) {
-            		Interceptor interceptor = method.getAnnotation(Interceptor.class);
-            		checkEvent(clazz, interceptor.event(), true);
+            		InterceptorAttribute attribute = buildInterceptorAttribute(method);
+            		interceptorSet.add(attribute);
+            	}
+            	if (method.isAnnotationPresent(Listener.class)) {
+            		ListenerAttribute attribute = buildListenerAttribute(method);
+            		listenerSet.add(attribute);
             	}
             }
     	}
 	}
 	
-	private void checkSubscribeClazz(Class<?> clazz) throws BeansException {
-    	if (clazz != null) {
-            Method[] methods = clazz.getDeclaredMethods();
-            for (Method method : methods){
-            	if (method.isAnnotationPresent(Listener.class)) {
-            		Listener listener = method.getAnnotation(Listener.class);
-            		List<String> channelList = checkChannel(clazz, listener.channel(), true);
-            		for (String channel : channelList) {
-            			Set<Method> set = listenerMapping.get(channel);
-            			if (set == null) {
-            				set = new HashSet<Method>();
-            				listenerMapping.put(channel, set);
-            			}
-            			set.add(method);
-            		}
-            	}
-            }
-    	}
+	private InterceptorAttribute buildInterceptorAttribute(Method method) throws FatalBeanException {
+		if (method == null || !method.isAnnotationPresent(Interceptor.class)) {
+			return null;
+		}
+		Class<?> targetClazz = method.getDeclaringClass();
+		Interceptor intr = method.getAnnotation(Interceptor.class);
+		String[] eventArr = intr.event();
+		InterceptType type = intr.type();
+		String expr = intr.expr();
+		List<String> events = checkEvent(targetClazz, eventArr, true);		
+		// 构建InterceptorAttribute
+		InterceptorAttribute attribute = new InterceptorAttribute();
+		attribute.setTargetClass(targetClazz);
+		attribute.setMethodName(method.getName());
+		attribute.setMethodParameterTypes(method.getParameterTypes());
+		attribute.setMethodparameterNames(discoverer.getParameterNames(method));
+		attribute.setEventList(events);
+		attribute.setInterceptType(type);
+		attribute.setExpression(expr);
+		return attribute;
+	}
+	
+	private ListenerAttribute buildListenerAttribute(Method method) throws FatalBeanException {
+		if (method == null || !method.isAnnotationPresent(Listener.class)) {
+			return null;
+		}
+		Class<?> targetClazz = method.getDeclaringClass();
+		Listener lisn = method.getAnnotation(Listener.class);
+		String[] channelArr = lisn.channel();
+		List<String> channels = checkChannel(targetClazz, channelArr, true);		
+		// 构建ListenerAttribute
+		ListenerAttribute attribute = new ListenerAttribute();
+		attribute.setTargetClass(targetClazz);
+		attribute.setMethodName(method.getName());
+		attribute.setMethodParameterTypes(method.getParameterTypes());
+		attribute.setChannelList(channels);
+		return attribute;
 	}
 	
 	private List<String> checkEvent(Class<?> clazz, String[] events, boolean needCheckExist) throws FatalBeanException {
@@ -258,7 +277,7 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 				if (StringUtils.isEmpty(channel)) {
 					it.remove();
 				}
-				if (needCheckExist && !channelSet.contains(channel)) {
+				if (needCheckExist && !channelEventMapping.containsKey(channel)) {
 					log.error("频道检查错误, 频道未声明: clazz={}, channel={}", clazz, channel);
 					throw new FatalBeanException("频道检查错误, 频道未声明: clazz=" + clazz + ", channel=" + channel);
 				}
@@ -285,8 +304,8 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 			throw new FatalBeanException("Signaler创建失败");
 		}
 		// 创建频道
-		if (channelSet.size() > 0) {
-			for (String channel : channelSet) {
+		if (channelEventMapping.size() > 0) {
+			for (String channel : channelEventMapping.keySet()) {
 				if (StringUtils.isEmpty(channel)) {
 					continue;
 				}
@@ -314,24 +333,22 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 			}
 		}
 		// 订阅频道
-		Iterator<Entry<String, Set<Method>>> listenerIterator = listenerMapping.entrySet().iterator();
-		while (listenerIterator.hasNext()) {
-			Entry<String, Set<Method>> entry = listenerIterator.next();
-			String ch = entry.getKey();
-			Set<Method> methodSet = entry.getValue();
-			if (!StringUtils.isEmpty(ch) && methodSet.size() > 0) {
-				for (final Method method : methodSet) {
-					if (method != null) {
-						final Class<?> subscriberClazz = method.getDeclaringClass();
-						signaler.subscribe(ch, new AdviceListener(subscriberClazz, method.getName(), method.getParameterTypes()));
-					}
+		Iterator<ListenerAttribute> it = listenerSet.iterator();
+		while (it.hasNext()) {
+			ListenerAttribute attribute = it.next();
+			if (attribute != null && !CollectionUtils.isEmpty(attribute.getChannelList())) {
+				for (String channel : attribute.getChannelList()) {
+					AdviceListener advice = new AdviceListener(attribute);
+					signaler.subscribe(channel, advice);
+					adviceSet.add(advice);
 				}
 			}
 		}
 		
-		PublisherAdvisor advisor = (PublisherAdvisor)beanFactory.getBean(pubAdvisorBeanName);
+		PublisherAdvisor advisor = (PublisherAdvisor)beanFactory.getBean(PUBLISHER_ADVISOR_BEAN_CLASS);
 		advisor.setSignaler(signaler);
 		advisor.setEventMapping(eventClazzMapping);
+		advisor.setAdviceSet(adviceSet);
 	}
 
 }
