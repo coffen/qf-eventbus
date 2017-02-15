@@ -348,7 +348,6 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 		PublisherAdvisor advisor = (PublisherAdvisor)beanFactory.getBean(PUBLISHER_ADVISOR_BEAN_CLASS);
 		advisor.setSignaler(signaler);
 		advisor.setEventMapping(eventClazzMapping);
-		advisor.setAdviceSet(adviceSet);
 	}
 
 }

@@ -2,9 +2,7 @@ package com.qf.eventbus.spring.bean;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.aopalliance.aop.Advice;
 import org.aopalliance.intercept.MethodInterceptor;
@@ -14,12 +12,7 @@ import org.springframework.aop.Pointcut;
 import org.springframework.aop.support.AbstractPointcutAdvisor;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.aop.support.annotation.AnnotationMatchingPointcut;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.FatalBeanException;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
-import org.springframework.util.CollectionUtils;
 
 import com.qf.eventbus.ActionData;
 import com.qf.eventbus.BusSignaler;
@@ -46,16 +39,13 @@ import com.qf.eventbus.spring.util.SpelExpressionUtil;
  * @version: v1.0
  *
  */
-public class PublisherAdvisor extends AbstractPointcutAdvisor implements BeanFactoryAware {
+public class PublisherAdvisor extends AbstractPointcutAdvisor {
 	
 	private static final long serialVersionUID = 7098195944662142447L;
-	
-	private BeanFactory factory;
 	
 	private BusSignaler signaler;
 	
 	private Map<String, Class<? extends Event>> eventMapping = new HashMap<String, Class<? extends Event>>();
-	private Set<AdviceListener> adviceSet = new HashSet<AdviceListener>();
 	
 	private Advice advice;
 	private Pointcut pointCut;
@@ -75,20 +65,6 @@ public class PublisherAdvisor extends AbstractPointcutAdvisor implements BeanFac
 	
 	public void setEventMapping(Map<String, Class<? extends Event>> eventMapping) {
 		this.eventMapping = eventMapping;
-	}
-	
-	public void setAdviceSet(Set<AdviceListener> adviceSet) throws BeansException {
-		this.adviceSet = adviceSet;
-		if (!CollectionUtils.isEmpty(this.adviceSet)) {
-			for (AdviceListener lisn : this.adviceSet) {
-				try {
-					lisn.fillProxy(factory);
-				}
-				catch (Exception e) {
-					throw new FatalBeanException("监听器设置代理失败");
-				}
-			}
-		}
 	}
 
 	public Pointcut getPointcut() {
@@ -117,7 +93,7 @@ public class PublisherAdvisor extends AbstractPointcutAdvisor implements BeanFac
 				Object data = null;
 				if (type == InterceptType.PARAMETER_BEFORE) {
 					data = parseParameter(parameterNames, invocation.getArguments(), expr);
-					fireEvents(events, data);
+					fireEvents(events, invocation.getThis(), m, data);
 					retured = invocation.proceed();
 				}
 				else if (type == InterceptType.PARAMETER_AFTER || type == InterceptType.RETURNING) {
@@ -128,14 +104,14 @@ public class PublisherAdvisor extends AbstractPointcutAdvisor implements BeanFac
 					else {
 						data = parseReturned(retured, expr);
 					}
-					fireEvents(events, data);
+					fireEvents(events, invocation.getThis(), m, data);
 				}
 				else {
 					try {
 						retured = invocation.proceed();
 					}
 					catch (Exception e) {
-						fireEvents(events, e);
+						fireEvents(events, invocation.getThis(), m, e);
 					}
 				}
 				return retured;
@@ -157,12 +133,12 @@ public class PublisherAdvisor extends AbstractPointcutAdvisor implements BeanFac
 		return SpelExpressionUtil.parse(returned, expression);
 	}
 	
-	private void fireEvents(String[] events, Object obj) {
+	private void fireEvents(String[] events, Object target, Method method, Object data) {
 		if (events != null && events.length > 0) {
 			for (String event : events) {
 				Class<? extends Event> eventClazz = eventMapping.get(event);
 				if (eventClazz != null) {
-					signaler.fileEvent(eventClazz, new ActionData<Object>(obj));
+					signaler.fileEvent(eventClazz, new ActionData<EventData>(new EventData(target, method, data)));
 				}
 			}
 		}
@@ -173,8 +149,29 @@ public class PublisherAdvisor extends AbstractPointcutAdvisor implements BeanFac
 		this.pointCut = methodPointcut;
 	}
 	
-	public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
-		this.factory = beanFactory;		
+	public class EventData {
+		
+		private Object target;
+		private Method method;
+		private Object data;
+		
+		public EventData(Object target, Method method, Object data) {
+			this.target = target;
+			this.method = method;
+			this.data = data;
+		}
+		
+		public Object getTarget() {
+			return target;
+		}
+		
+		public Method getMethod() {
+			return method;
+		}
+		
+		public Object getData() {
+			return data;
+		}
 	}
 
 }
