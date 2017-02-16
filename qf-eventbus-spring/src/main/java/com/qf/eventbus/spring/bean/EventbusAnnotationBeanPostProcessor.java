@@ -167,6 +167,7 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
     			try {
 	    			Enhancer enhancer = new Enhancer();
 	    			enhancer.setInterfaces(new Class[] { Event.class });
+	    			enhancer.setSuperclass(clazz);
 	    			enhancer.setCallbackType(NoOp.class);
 	    			eventProxyClazz = enhancer.createClass();
     			}
