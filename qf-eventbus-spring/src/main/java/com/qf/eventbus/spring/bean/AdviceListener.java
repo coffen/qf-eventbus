@@ -33,8 +33,8 @@ public class AdviceListener implements Listener {
 		try {
 			Object targetProxy = factory.getBean(attribute.getTargetClass());
 			Method method = targetProxy.getClass().getMethod(attribute.getMethodName(), attribute.getMethodParameterTypes());
-			method.invoke(targetProxy, (Long)data.getData());
-		} 
+			method.invoke(targetProxy, (Object[])data.getData());
+		}
 		catch (Exception e) {
 			log.error("监听器处理错误: method=" + attribute.getTargetClass().getName() + "." + attribute.getMethodName(), e);
 		}

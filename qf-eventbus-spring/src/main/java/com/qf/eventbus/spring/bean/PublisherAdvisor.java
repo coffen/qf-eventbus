@@ -91,7 +91,7 @@ public class PublisherAdvisor extends AbstractPointcutAdvisor {
 				LocalVariableTableParameterNameDiscoverer u = new LocalVariableTableParameterNameDiscoverer();
 				String[] parameterNames = u.getParameterNames(m1);
 				Object retured = null;
-				Object data = null;
+				Object[] data = null;
 				if (type == InterceptType.PARAMETER_BEFORE) {
 					data = parseParameter(parameterNames, invocation.getArguments(), expr);
 					fireEvents(events, data);
@@ -112,7 +112,7 @@ public class PublisherAdvisor extends AbstractPointcutAdvisor {
 						retured = invocation.proceed();
 					}
 					catch (Exception e) {
-						fireEvents(events, e);
+						fireEvents(events, new Object[] { e });
 					}
 				}
 				return retured;
@@ -120,18 +120,18 @@ public class PublisherAdvisor extends AbstractPointcutAdvisor {
 		};
 	}
 	
-	private Object parseParameter(String[] parameterNames, Object[] parameterValues, String expression) {
+	private Object[] parseParameter(String[] parameterNames, Object[] parameterValues, String expression) {
 		if (StringUtils.isEmpty(expression)) {
 			return parameterValues;
 		}
-		return SpelExpressionUtil.parse(parameterNames, parameterValues, expression);
+		return new Object[] { SpelExpressionUtil.parse(parameterNames, parameterValues, expression) };
 	}
 	
-	private Object parseReturned(Object returned, String expression) {
+	private Object[] parseReturned(Object returned, String expression) {
 		if (StringUtils.isEmpty(expression)) {
-			return returned;
+			return new Object[] { returned };
 		}
-		return SpelExpressionUtil.parse(returned, expression);
+		return new Object[] { SpelExpressionUtil.parse(returned, expression) };
 	}
 	
 	private void fireEvents(String[] events, Object data) {
