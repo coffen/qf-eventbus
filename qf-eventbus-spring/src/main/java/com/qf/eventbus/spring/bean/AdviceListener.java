@@ -31,7 +31,7 @@ public class AdviceListener implements Listener {
 	@SuppressWarnings("rawtypes")
 	public void onEvent(ActionData data) {
 		try {
-			Object targetProxy = factory.getBean(attribute.getTargetClass());
+			Object targetProxy = factory.getBean(attribute.getBeanClazzName());
 			Method method = targetProxy.getClass().getMethod(attribute.getMethodName(), attribute.getMethodParameterTypes());
 			method.invoke(targetProxy, (Object[])data.getData());
 		}

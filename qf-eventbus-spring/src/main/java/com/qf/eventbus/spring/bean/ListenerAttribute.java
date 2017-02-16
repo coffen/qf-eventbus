@@ -25,6 +25,8 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class ListenerAttribute {
 	
+	private final static String BEAN_CLAZZ_NAME_PREFIX = "Listener@";
+	
 	private Class<?> targetClass;
 	private String methodName;
 	private Class<?>[] methodParameterTypes;
@@ -74,6 +76,20 @@ public class ListenerAttribute {
 		Class<?>[] clazzArr1 = methodParameterTypes == null ? new Class<?>[0] : methodParameterTypes;
 		Class<?>[] clazzArr2 = attribute.getMethodParameterTypes() == null ? new Class<?>[0] : attribute.getMethodParameterTypes();
 		return Arrays.deepEquals(clazzArr1, clazzArr2);
+	}
+	
+	public String getBeanClazzName() {
+		if (targetClass == null) {
+			return null;
+		}
+		return BEAN_CLAZZ_NAME_PREFIX + targetClass.getName();
+	}
+	
+	public static String getBeanClazzName(Class<?> clazz) {
+		if (clazz == null) {
+			return null;
+		}
+		return BEAN_CLAZZ_NAME_PREFIX + clazz.getName();
 	}
 
 }

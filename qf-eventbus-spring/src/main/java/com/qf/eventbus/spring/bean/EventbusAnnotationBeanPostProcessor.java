@@ -112,7 +112,10 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
         for(BeanDefinition bd : beanDefinitions) {
         	try {
         		Class<?> clazz = classLoader.loadClass(bd.getBeanClassName());
-       			checkAnnoClazz(clazz);
+       			boolean hasListener = checkAnnoClazz(clazz);
+       			if (hasListener) {
+       				registerBeanDifinition(registry, BeanDefinitionBuilder.genericBeanDefinition(clazz), ListenerAttribute.getBeanClazzName(clazz));
+       			}
         	}
         	catch (ClassNotFoundException e) {
         		log.error("未找到指定类", e);
@@ -121,9 +124,8 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 		// 注册BusServerl类型Bean
 		registerBeanDifinition(registry, BeanDefinitionBuilder.genericBeanDefinition(BUS_BEAN_CLASS), BUS_BEAN_CLASS.getName());
         
-    	// 创建PublisherAdvisor的BeanDifinition
-		BeanDefinitionBuilder pubBuilder = BeanDefinitionBuilder.genericBeanDefinition(PUBLISHER_ADVISOR_BEAN_CLASS);
-		registerBeanDifinition(registry, pubBuilder, PUBLISHER_ADVISOR_BEAN_CLASS.getName());
+    	// 注册PublisherAdvisor的BeanDifinition
+		registerBeanDifinition(registry, BeanDefinitionBuilder.genericBeanDefinition(PUBLISHER_ADVISOR_BEAN_CLASS), PUBLISHER_ADVISOR_BEAN_CLASS.getName());
 	}
 	
 	private void registerBeanDifinition(BeanDefinitionRegistry registry, BeanDefinitionBuilder builder, String beanName) {
@@ -185,7 +187,8 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
     	}
     }
 	
-	private void checkAnnoClazz(Class<?> clazz) throws BeansException {
+	private boolean checkAnnoClazz(Class<?> clazz) throws BeansException {
+		int lisnCount = 0;
     	if (clazz != null) {
             Method[] methods = clazz.getDeclaredMethods();
             for (Method method : methods) {
@@ -196,9 +199,11 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
             	if (method.isAnnotationPresent(Listener.class)) {
             		ListenerAttribute attribute = buildListenerAttribute(method);
             		listenerSet.add(attribute);
+            		lisnCount++;
             	}
             }
     	}
+    	return lisnCount > 0;
 	}
 	
 	private InterceptorAttribute buildInterceptorAttribute(Method method) throws FatalBeanException {
