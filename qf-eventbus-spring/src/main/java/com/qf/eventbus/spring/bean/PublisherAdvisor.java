@@ -115,6 +115,10 @@ public class PublisherAdvisor extends AbstractPointcutAdvisor {
 				}
 				Method m = invocation.getMethod();
 				InterceptorAttribute attribute = getAttribute(targetClass, m.getName(), m.getParameterTypes());
+				if (attribute == null) {
+					log.error("未找到注释属性: Method={},{},{}", targetClass.getName(), m.getName(), m.getParameterTypes());
+					return invocation.proceed();
+				}
 				InterceptType type = attribute.getInterceptType();
 				List<String> events = attribute.getEventList();
 				String expr = attribute.getExpression();
