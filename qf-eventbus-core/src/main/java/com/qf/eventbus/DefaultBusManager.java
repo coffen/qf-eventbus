@@ -3,8 +3,6 @@ package com.qf.eventbus;
 import com.qf.eventbus.event.ChannelCreateEvent;
 import com.qf.eventbus.event.RegisteEvent;
 import com.qf.eventbus.event.SubscribeEvent;
-import com.qf.eventbus.event.UnregisteEvent;
-import com.qf.eventbus.event.UnsubscribeEvent;
 
 /**
  * 
@@ -45,9 +43,7 @@ public class DefaultBusManager extends AbstractBusManager {
 			
 			mainSignaler.register(innerChannel, ChannelCreateEvent.class);
 			mainSignaler.register(innerChannel, RegisteEvent.class);
-			mainSignaler.register(innerChannel, UnregisteEvent.class);
 			mainSignaler.register(innerChannel, SubscribeEvent.class);
-			mainSignaler.register(innerChannel, UnsubscribeEvent.class);
 		}
 	}
 
