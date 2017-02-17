@@ -65,8 +65,8 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 	
 	private final Map<String, Class<? extends Event>> eventClazzMapping = new HashMap<String, Class<? extends Event>>();
 	private final Map<String, Set<Class<? extends Event>>> channelEventMapping = new HashMap<String, Set<Class<? extends Event>>>();
-	private final Set<InterceptorAttribute> interceptorSet = new HashSet<InterceptorAttribute>();
-	private final Set<ListenerAttribute> listenerSet = new HashSet<ListenerAttribute>();
+	private final List<InterceptorAttribute> interceptorList = new ArrayList<InterceptorAttribute>();
+	private final List<ListenerAttribute> listenerList = new ArrayList<ListenerAttribute>();
 	
 	private final Class<?> PUBLISHER_ADVISOR_BEAN_CLASS = PublisherAdvisor.class;
 	private final Class<?> BUS_BEAN_CLASS = BusServer.class;
@@ -195,11 +195,11 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
             for (Method method : methods) {
             	if (method.isAnnotationPresent(Interceptor.class)) {
             		InterceptorAttribute attribute = buildInterceptorAttribute(method);
-            		interceptorSet.add(attribute);
+            		interceptorList.add(attribute);
             	}
             	if (method.isAnnotationPresent(Listener.class)) {
             		ListenerAttribute attribute = buildListenerAttribute(method);
-            		listenerSet.add(attribute);
+            		listenerList.add(attribute);
             		lisnCount++;
             	}
             }
@@ -333,7 +333,7 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 			}
 		}
 		// 订阅频道
-		Iterator<ListenerAttribute> it = listenerSet.iterator();
+		Iterator<ListenerAttribute> it = listenerList.iterator();
 		while (it.hasNext()) {
 			ListenerAttribute attribute = it.next();
 			if (attribute != null && !CollectionUtils.isEmpty(attribute.getChannelList())) {
@@ -348,7 +348,7 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 		PublisherAdvisor advisor = (PublisherAdvisor)beanFactory.getBean(PUBLISHER_ADVISOR_BEAN_CLASS);
 		advisor.setSignaler(signaler);
 		advisor.setEventMapping(eventClazzMapping);
-		advisor.setAttributeList(new ArrayList<InterceptorAttribute>(interceptorSet));
+		advisor.setAttributeList(interceptorList);
 	}
 
 }

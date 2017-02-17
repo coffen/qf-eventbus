@@ -1,9 +1,6 @@
 package com.qf.eventbus.spring.bean;
 
-import java.util.Arrays;
 import java.util.List;
-
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * 
@@ -63,19 +60,6 @@ public class ListenerAttribute {
 
 	public void setChannelList(List<String> channelList) {
 		this.channelList = channelList;
-	}	
-	
-	public boolean equals(Object obj) {
-		if (targetClass == null || StringUtils.isEmpty(methodName) || !(obj instanceof InterceptorAttribute)) {
-			return false;
-		}
-		InterceptorAttribute attribute = (InterceptorAttribute)obj;
-		if ((targetClass != attribute.getTargetClass()) || !(methodName.equals(attribute.getMethodName()))) {
-			return false;
-		}
-		Class<?>[] clazzArr1 = methodParameterTypes == null ? new Class<?>[0] : methodParameterTypes;
-		Class<?>[] clazzArr2 = attribute.getMethodParameterTypes() == null ? new Class<?>[0] : attribute.getMethodParameterTypes();
-		return Arrays.deepEquals(clazzArr1, clazzArr2);
 	}
 	
 	public String getBeanClazzName() {

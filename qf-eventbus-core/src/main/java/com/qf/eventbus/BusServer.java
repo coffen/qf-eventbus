@@ -42,21 +42,5 @@ public class BusServer extends AbstractIdleService {
 	public BusSignaler buildSignaler() {
 		return manager.buildSignaler();
 	}
-	
-	public static void main(String[] args) {
-		BusServer server = new BusServer();
-		server.startAsync();
-        try {
-            Object lock = new Object();
-            synchronized(lock) {
-                while (true) {
-                    lock.wait();
-                }
-            }
-        }
-        catch (InterruptedException ex) {
-            log.debug("ignore interruption");
-        }
-	}
 
 }
