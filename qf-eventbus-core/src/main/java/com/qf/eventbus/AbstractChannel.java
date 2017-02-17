@@ -120,6 +120,7 @@ public abstract class AbstractChannel implements Channel, ChannelHandler<Abstrac
 		}
 		Sender sender = holder.removeSender(sid);
 		if (sender != null) {
+			sender.setValid(false);
 			sender.destroy();
 			sender = null;
 		}
@@ -133,6 +134,7 @@ public abstract class AbstractChannel implements Channel, ChannelHandler<Abstrac
 		}
 		Receiver receiver = holder.removeReceiver(rid);
 		if (receiver != null) {
+			receiver.setValid(false);
 			receiver.destroy();
 			receiver = null;
 		}

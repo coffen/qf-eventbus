@@ -51,7 +51,6 @@ public class Receiver extends AbstractChannelRegistry implements ChannelSubscrib
 			if (isValid()) {
 				boolean result = channel.unRegiste(getSignalerId());
 				if (result) {
-					setValid(false);
 					log.info("取消订阅成功: rid={}", getSignalerId());
 				}
 			}

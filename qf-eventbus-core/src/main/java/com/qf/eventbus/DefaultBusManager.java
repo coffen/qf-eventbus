@@ -27,7 +27,6 @@ import com.qf.eventbus.event.UnsubscribeEvent;
 public class DefaultBusManager extends AbstractBusManager {
 	
 	private final String innerChannel = "_bus";
-	private final BusSignaler mainSignaler = new BusSignaler(this);
 	
 	public DefaultBusManager() {
 		registerInnerEvent();
@@ -39,6 +38,7 @@ public class DefaultBusManager extends AbstractBusManager {
 	}
 	
 	private void registerInnerEvent() {
+		mainSignaler = new BusSignaler(this);
 		boolean created = mainSignaler.buildChannel(innerChannel, Dispatcher.Type.MUTIL);
 		if (created) {
 			mainSignaler.openChannel(innerChannel);

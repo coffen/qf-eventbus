@@ -45,7 +45,6 @@ public class Sender extends AbstractChannelRegistry implements ChannelPublisher 
 			if (isValid()) {
 				boolean result = channel.unRegiste(getSignalerId());
 				if (result) {
-					setValid(false);
 					log.info("注销发布器成功: sid={}", getSignalerId());
 				}
 			}
@@ -56,7 +55,7 @@ public class Sender extends AbstractChannelRegistry implements ChannelPublisher 
 
 	public <T> void send(ActionData<T> data) {
 		if (!isValid()) {
-			log.error("发送消息失败, 当前频道注册已失效");
+			log.error("发送消息失败, 当前发布器已失效");
 			return;
 		}
 		data.setRegisterId(getSignalerId());

@@ -10,6 +10,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.qf.eventbus.event.ChannelCreateEvent;
+import com.qf.eventbus.event.RegisteEvent;
+import com.qf.eventbus.event.SubscribeEvent;
+
 /**
  * 
  * <p>
@@ -35,6 +39,8 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 	private ChannelWorker worker = new ChannelWorker();
 	private Class<? extends AbstractChannel> channelClass = DefaultChannel.class;
 	
+	protected BusSignaler mainSignaler;
+	
 	@Override
 	public BusSignaler buildSignaler() {
 		BusManager proxy = buildBusManagerProxy();
@@ -53,6 +59,9 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 			AbstractChannel t = worker.build(request.getChannel(), channelClass);
 			if (t != null) {
 				handler = buildChannelHandlerProxy((T)t);
+			}
+			if (mainSignaler != null) {
+				mainSignaler.fileEvent(ChannelCreateEvent.class, new ActionData<CreateRequest>(request));
 			}
 		}
 		catch (Exception e) {
@@ -73,6 +82,9 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 			return publisher;
 		}
 		publisher = chl.registe(request);
+		if (publisher != null && mainSignaler != null) {
+			mainSignaler.fileEvent(RegisteEvent.class, new ActionData<RegisteRequest>(request));
+		}
 		return publisher;
 	}
 	
@@ -88,6 +100,9 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 			return subscriber;
 		}
 		subscriber = chl.subscribe(request);
+		if (subscriber != null && mainSignaler != null) {
+			mainSignaler.fileEvent(SubscribeEvent.class, new ActionData<SubscribeRequest>(request));
+		}
 		return subscriber;
 	}
 	
