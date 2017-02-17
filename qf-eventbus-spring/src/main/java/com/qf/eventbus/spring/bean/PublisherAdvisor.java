@@ -1,18 +1,23 @@
 package com.qf.eventbus.spring.bean;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.aopalliance.aop.Advice;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.aop.Pointcut;
 import org.springframework.aop.support.AbstractPointcutAdvisor;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.aop.support.annotation.AnnotationMatchingPointcut;
-import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 
 import com.qf.eventbus.ActionData;
 import com.qf.eventbus.BusSignaler;
@@ -43,9 +48,12 @@ public class PublisherAdvisor extends AbstractPointcutAdvisor {
 	
 	private static final long serialVersionUID = 7098195944662142447L;
 	
+	private final Logger log = LoggerFactory.getLogger(this.getClass());
+	
 	private BusSignaler signaler;
 	
 	private Map<String, Class<? extends Event>> eventMapping = new HashMap<String, Class<? extends Event>>();
+	private List<InterceptorAttribute> attributeList = new ArrayList<InterceptorAttribute>();
 	
 	private Advice advice;
 	private Pointcut pointCut;
@@ -66,6 +74,29 @@ public class PublisherAdvisor extends AbstractPointcutAdvisor {
 	public void setEventMapping(Map<String, Class<? extends Event>> eventMapping) {
 		this.eventMapping = eventMapping;
 	}
+	
+	public void setAttributeList(List<InterceptorAttribute> attributeList) {
+		if (CollectionUtils.isEmpty(attributeList)) {
+			log.error("拦截器注释列表为空");
+			return;
+		}
+		this.attributeList = attributeList;
+	}
+	
+	public InterceptorAttribute getAttribute(Class<?> clazz, String methodName, Class<?>[] parameterTypes) {
+		if (!CollectionUtils.isEmpty(attributeList)) {
+			for (InterceptorAttribute attribute : attributeList) {
+				if (attribute != null && clazz != null && !StringUtils.isEmpty(methodName) && clazz == attribute.getTargetClass() && methodName.equals(attribute.getMethodName())) {
+					Class<?>[] clazzArr1 = parameterTypes == null ? new Class<?>[0] : parameterTypes;
+					Class<?>[] clazzArr2 = attribute.getMethodParameterTypes() == null ? new Class<?>[0] : attribute.getMethodParameterTypes();
+					if (Arrays.deepEquals(clazzArr1, clazzArr2)) {
+						return attribute;
+					}
+				}
+			}
+		}
+		return null;
+	}
 
 	public Pointcut getPointcut() {
 		return this.pointCut;
@@ -83,13 +114,11 @@ public class PublisherAdvisor extends AbstractPointcutAdvisor {
 					return invocation.proceed();
 				}
 				Method m = invocation.getMethod();
-				Method m1 = targetClass.getMethod(m.getName(), m.getParameterTypes());
-				Interceptor interceptor = m1.getAnnotation(Interceptor.class);
-				InterceptType type = interceptor.type();
-				String[] events = interceptor.event();
-				String expr = interceptor.expr();
-				LocalVariableTableParameterNameDiscoverer u = new LocalVariableTableParameterNameDiscoverer();
-				String[] parameterNames = u.getParameterNames(m1);
+				InterceptorAttribute attribute = getAttribute(targetClass, m.getName(), m.getParameterTypes());
+				InterceptType type = attribute.getInterceptType();
+				List<String> events = attribute.getEventList();
+				String expr = attribute.getExpression();
+				String[] parameterNames = attribute.getMethodparameterNames();
 				Object retured = null;
 				Object[] data = null;
 				if (type == InterceptType.PARAMETER_BEFORE) {
@@ -134,8 +163,8 @@ public class PublisherAdvisor extends AbstractPointcutAdvisor {
 		return new Object[] { SpelExpressionUtil.parse(returned, expression) };
 	}
 	
-	private void fireEvents(String[] events, Object data) {
-		if (events != null && events.length > 0) {
+	private void fireEvents(List<String> events, Object data) {
+		if (!CollectionUtils.isEmpty(events)) {
 			for (String event : events) {
 				Class<? extends Event> eventClazz = eventMapping.get(event);
 				if (eventClazz != null) {

@@ -36,6 +36,12 @@ public class InterceptorAttribute {
 	private InterceptType interceptType;
 	private String expression;
 	
+	public InterceptorAttribute(Class<?> targetClass, String methodName, Class<?>[] methodParameterTypes) {
+		this.targetClass = targetClass;
+		this.methodName = methodName;
+		this.methodParameterTypes = methodParameterTypes;
+	}
+	
 	public Class<?> getTargetClass() {
 		return targetClass;
 	}

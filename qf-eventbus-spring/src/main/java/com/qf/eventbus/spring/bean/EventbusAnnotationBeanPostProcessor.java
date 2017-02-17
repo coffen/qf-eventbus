@@ -218,10 +218,7 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 		String expr = intr.expr();
 		List<String> events = checkEvent(targetClazz, eventArr, true);		
 		// 构建InterceptorAttribute
-		InterceptorAttribute attribute = new InterceptorAttribute();
-		attribute.setTargetClass(targetClazz);
-		attribute.setMethodName(method.getName());
-		attribute.setMethodParameterTypes(method.getParameterTypes());
+		InterceptorAttribute attribute = new InterceptorAttribute(targetClazz, method.getName(), method.getParameterTypes());
 		attribute.setMethodparameterNames(discoverer.getParameterNames(method));
 		attribute.setEventList(events);
 		attribute.setInterceptType(type);
@@ -351,6 +348,7 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 		PublisherAdvisor advisor = (PublisherAdvisor)beanFactory.getBean(PUBLISHER_ADVISOR_BEAN_CLASS);
 		advisor.setSignaler(signaler);
 		advisor.setEventMapping(eventClazzMapping);
+		advisor.setAttributeList(new ArrayList<InterceptorAttribute>(interceptorSet));
 	}
 
 }
