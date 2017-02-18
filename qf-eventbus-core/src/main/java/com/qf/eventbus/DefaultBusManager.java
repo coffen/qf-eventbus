@@ -1,8 +1,8 @@
 package com.qf.eventbus;
 
+import com.qf.eventbus.event.ChannelCloseEvent;
 import com.qf.eventbus.event.ChannelCreateEvent;
-import com.qf.eventbus.event.RegisteEvent;
-import com.qf.eventbus.event.SubscribeEvent;
+import com.qf.eventbus.event.ChannelOpenEvent;
 
 /**
  * 
@@ -27,24 +27,23 @@ public class DefaultBusManager extends AbstractBusManager {
 	private final String innerChannel = "_bus";
 	
 	public DefaultBusManager() {
-		registerInnerEvent();
-	}
-
-	@Override
-	public <T> void onEvent(ActionData<T> data) {
-		
+		initMainSignaler();
 	}
 	
-	private void registerInnerEvent() {
-		mainSignaler = new BusSignaler(this);
+	private void initMainSignaler() {
 		boolean created = mainSignaler.buildChannel(innerChannel, Dispatcher.Type.MUTIL);
 		if (created) {
 			mainSignaler.openChannel(innerChannel);
 			
 			mainSignaler.register(innerChannel, ChannelCreateEvent.class);
-			mainSignaler.register(innerChannel, RegisteEvent.class);
-			mainSignaler.register(innerChannel, SubscribeEvent.class);
+			mainSignaler.register(innerChannel, ChannelOpenEvent.class);
+			mainSignaler.register(innerChannel, ChannelCloseEvent.class);
 		}
+	}
+
+	@Override
+	public <T> void onEvent(ActionData<T> data) {
+		
 	}
 
 }

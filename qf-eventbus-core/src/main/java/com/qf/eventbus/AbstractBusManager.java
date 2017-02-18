@@ -11,8 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.qf.eventbus.event.ChannelCreateEvent;
-import com.qf.eventbus.event.RegisteEvent;
-import com.qf.eventbus.event.SubscribeEvent;
 
 /**
  * 
@@ -39,7 +37,7 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 	private ChannelWorker worker = new ChannelWorker();
 	private Class<? extends AbstractChannel> channelClass = DefaultChannel.class;
 	
-	protected BusSignaler mainSignaler;
+	protected BusSignaler mainSignaler = new BusSignaler(this);
 	
 	@Override
 	public BusSignaler buildSignaler() {
@@ -60,7 +58,7 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 			if (t != null) {
 				handler = buildChannelHandlerProxy((T)t);
 			}
-			if (mainSignaler != null) {
+			if (handler != null && mainSignaler != null) {
 				mainSignaler.fileEvent(ChannelCreateEvent.class, new ActionData<CreateRequest>(request));
 			}
 		}
@@ -81,11 +79,7 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 			log.error("绑定频道错误, 频道{}不存在", request.getChannel());
 			return publisher;
 		}
-		publisher = chl.registe(request);
-		if (publisher != null && mainSignaler != null) {
-			mainSignaler.fileEvent(RegisteEvent.class, new ActionData<RegisteRequest>(request));
-		}
-		return publisher;
+		return chl.registe(request);
 	}
 	
 	public ChannelSubscriber subscribe(SubscribeRequest request) {
@@ -99,11 +93,7 @@ public abstract class AbstractBusManager implements BusManager, Listener {
 			log.error("订阅频道错误, 频道{}不存在", request.getChannel());
 			return subscriber;
 		}
-		subscriber = chl.subscribe(request);
-		if (subscriber != null && mainSignaler != null) {
-			mainSignaler.fileEvent(SubscribeEvent.class, new ActionData<SubscribeRequest>(request));
-		}
-		return subscriber;
+		return chl.subscribe(request);
 	}
 	
 	public List<String> getChannelList() {
