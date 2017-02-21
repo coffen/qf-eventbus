@@ -36,9 +36,10 @@ public class SpelTest {
 		SpelExpressionUtil.preParse("#root.children[0].name");
 		SpelExpressionUtil.preParse("#root['father'].children.size()");
 		
-		int count = 24;
+		// 第一次运行
+		int count = 32;
 		long start = System.currentTimeMillis();
-		final CountDownLatch latch = new CountDownLatch(count);
+		final CountDownLatch latch1 = new CountDownLatch(count);
 		for (int i = 0; i < count; i++) {
 			Thread t = new Thread(new Runnable() {				
 				public void run() {
@@ -47,14 +48,39 @@ public class SpelTest {
 					System.out.println(SpelExpressionUtil.parse(new String[] { "father", "gift" }, new Object[] { p, pp }, "#root['father'].children.size()"));
 					System.out.println("单次运行时间:" + (System.currentTimeMillis() - u));
 					
-					latch.countDown();
+					latch1.countDown();
 				}
 			});
 			t.setDaemon(false);
 			t.start();
 		}
 		try {
-			latch.await();
+			latch1.await();
+			System.out.println("总时间: " + (System.currentTimeMillis() - start));
+		} 
+		catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
+		// 第二次运行
+		start = System.currentTimeMillis();
+		final CountDownLatch latch2 = new CountDownLatch(count);
+		for (int i = 0; i < count; i++) {
+			Thread t = new Thread(new Runnable() {				
+				public void run() {
+					long u = System.currentTimeMillis();
+					System.out.println(SpelExpressionUtil.parse(p, "#root.children[0].name"));
+					System.out.println(SpelExpressionUtil.parse(new String[] { "father", "gift" }, new Object[] { p, pp }, "#root['father'].children.size()"));
+					System.out.println("单次运行时间:" + (System.currentTimeMillis() - u));
+					
+					latch2.countDown();
+				}
+			});
+			t.setDaemon(false);
+			t.start();
+		}
+		try {
+			latch2.await();
 			System.out.println("总时间: " + (System.currentTimeMillis() - start));
 		} 
 		catch (InterruptedException e) {
