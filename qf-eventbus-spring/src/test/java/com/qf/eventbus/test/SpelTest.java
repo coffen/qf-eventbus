@@ -36,7 +36,8 @@ public class SpelTest {
 		SpelExpressionUtil.preParse("#root.children[0].name");
 		SpelExpressionUtil.preParse("#root['father'].children.size()");
 		
-		int count = 10;
+		int count = 24;
+		long start = System.currentTimeMillis();
 		final CountDownLatch latch = new CountDownLatch(count);
 		for (int i = 0; i < count; i++) {
 			Thread t = new Thread(new Runnable() {				
@@ -44,7 +45,7 @@ public class SpelTest {
 					long u = System.currentTimeMillis();
 					System.out.println(SpelExpressionUtil.parse(p, "#root.children[0].name"));
 					System.out.println(SpelExpressionUtil.parse(new String[] { "father", "gift" }, new Object[] { p, pp }, "#root['father'].children.size()"));
-					System.out.println(System.currentTimeMillis() - u);
+					System.out.println("单次运行时间:" + (System.currentTimeMillis() - u));
 					
 					latch.countDown();
 				}
@@ -54,6 +55,7 @@ public class SpelTest {
 		}
 		try {
 			latch.await();
+			System.out.println("总时间: " + (System.currentTimeMillis() - start));
 		} 
 		catch (InterruptedException e) {
 			e.printStackTrace();
