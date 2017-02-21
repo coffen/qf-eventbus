@@ -32,14 +32,18 @@ public class SpelTest {
 		cc.setName("服饰");
 		pp.setCategory(cc);
 		
-		int count = 1000;
+		// 预解析
+		SpelExpressionUtil.preParse("#root.children[0].name");
+		SpelExpressionUtil.preParse("#root['father'].children.size()");
+		
+		int count = 10;
 		final CountDownLatch latch = new CountDownLatch(count);
 		for (int i = 0; i < count; i++) {
 			Thread t = new Thread(new Runnable() {				
 				public void run() {
 					long u = System.currentTimeMillis();
-					SpelExpressionUtil.parse(p, "#root.children[0].name");
-					SpelExpressionUtil.parse(pp, "#root.category.name");
+					System.out.println(SpelExpressionUtil.parse(p, "#root.children[0].name"));
+					System.out.println(SpelExpressionUtil.parse(new String[] { "father", "gift" }, new Object[] { p, pp }, "#root['father'].children.size()"));
 					System.out.println(System.currentTimeMillis() - u);
 					
 					latch.countDown();

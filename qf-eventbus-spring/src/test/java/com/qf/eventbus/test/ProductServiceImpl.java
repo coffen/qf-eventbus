@@ -9,7 +9,7 @@ import com.qf.eventbus.spring.anno.Listener;
 @Service("productService")
 public class ProductServiceImpl implements ProductService {
 	
-	@Interceptor(event={"cacheEvent", "esEvent"}, type=InterceptType.PARAMETER_AFTER, expr="#id")
+	@Interceptor(event={"cacheEvent", "esEvent"}, type=InterceptType.PARAMETER_AFTER, expr="#root['id']")
 	public void save(long id) {
 		System.out.println("product saved: " + id);
 	}

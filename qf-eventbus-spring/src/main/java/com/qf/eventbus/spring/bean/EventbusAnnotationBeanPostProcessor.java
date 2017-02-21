@@ -38,6 +38,7 @@ import com.qf.eventbus.spring.anno.EventBinding;
 import com.qf.eventbus.spring.anno.InterceptType;
 import com.qf.eventbus.spring.anno.Interceptor;
 import com.qf.eventbus.spring.anno.Listener;
+import com.qf.eventbus.spring.util.SpelExpressionUtil;
 
 /**
  * 
@@ -216,7 +217,9 @@ public class EventbusAnnotationBeanPostProcessor implements BeanDefinitionRegist
 		String[] eventArr = intr.event();
 		InterceptType type = intr.type();
 		String expr = intr.expr();
-		List<String> events = checkEvent(targetClazz, eventArr, true);		
+		List<String> events = checkEvent(targetClazz, eventArr, true);
+		// 预解析表达式
+		SpelExpressionUtil.preParse(expr);
 		// 构建InterceptorAttribute
 		InterceptorAttribute attribute = new InterceptorAttribute(targetClazz, method.getName(), method.getParameterTypes());
 		attribute.setMethodparameterNames(discoverer.getParameterNames(method));

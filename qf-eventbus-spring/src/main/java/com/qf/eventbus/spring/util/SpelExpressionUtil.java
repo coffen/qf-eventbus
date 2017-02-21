@@ -1,9 +1,12 @@
 package com.qf.eventbus.spring.util;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
@@ -29,6 +32,23 @@ public class SpelExpressionUtil {
 	
 	private final static Logger log = LoggerFactory.getLogger(SpelExpressionUtil.class);
 	
+	private final static Map<String, Expression> expressionMap = new HashMap<String, Expression>();
+	private final static StandardEvaluationContext context = new StandardEvaluationContext();
+	
+	/**
+	 * 解析单个参数组成的表达式
+	 * 
+	 * @param object
+	 * @param expr
+	 * @return
+	 */
+	public static void preParse(String expr) {
+		if (StringUtils.isBlank(expr)) {
+			return;
+		}
+		loadExpression(expr);
+	}
+	
 	/**
 	 * 解析单个参数组成的表达式
 	 * 
@@ -44,10 +64,12 @@ public class SpelExpressionUtil {
 		if (StringUtils.isBlank(expr)) {
 			return object;
 		}
-		ExpressionParser parser = new SpelExpressionParser();
-		StandardEvaluationContext context = new StandardEvaluationContext();
-		context.setRootObject(object);
-		return parser.parseExpression(expr).getValue(context);
+		Expression expression = loadExpression(expr);
+		if (expression == null) {
+			log.error("表达式解析结果为空: expr={}" + expr);
+			return null;
+		}
+		return expression.getValue(context, object);
 	}
 	
 	/**
@@ -69,12 +91,30 @@ public class SpelExpressionUtil {
 		if (StringUtils.isBlank(expr)) {
 			return objects;
 		}
-		ExpressionParser parser = new SpelExpressionParser();
-		StandardEvaluationContext context = new StandardEvaluationContext();
-		for(int i = 0; i < objectNames.length; i++) {
-			context.setVariable(objectNames[i], objects[i]);
+		Expression expression = loadExpression(expr);
+		if (expression == null) {
+			log.error("表达式解析结果为空: expr={}" + expr);
+			return null;
 		}
-		return parser.parseExpression(expr).getValue(context);
+		Map<String, Object> value = new HashMap<String, Object>();
+		for(int i = 0; i < objectNames.length; i++) {
+			value.put(objectNames[i], objects[i]);
+		}
+		return expression.getValue(context, value);
+	}
+	
+	private static Expression loadExpression(String expr) {
+		if (StringUtils.isBlank(expr)) {
+			return null;
+		}
+		Expression expression = expressionMap.get(expr);
+		if (expression == null) {
+			expression = new SpelExpressionParser().parseExpression(expr);
+			if (expression != null) {
+				expressionMap.put(expr, expression);
+			}
+		}
+		return expression;
 	}
 
 }
